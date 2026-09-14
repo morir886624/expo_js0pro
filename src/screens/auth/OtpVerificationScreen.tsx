@@ -1,21 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { Button } from '../../components/common/Button';
 import { BorderRadius, Spacing, Typography } from '../../constants/theme';
+import { supabase } from '../../services/supabase';
 
 interface OtpVerificationScreenProps {
   email: string;
@@ -31,17 +28,14 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   onVerifySuccess,
 }) => {
   const { colors, isDark } = useTheme();
-  const { verifyEmailOtp, resendOtp } = useAuth();
+  const { resendOtp } = useAuth();
   const insets = useSafeAreaInsets();
 
-  const [code, setCode] = useState<string[]>(['', '', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [cooldown, setCooldown] = useState(60);
-
-  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   // Cooldown countdown timer for resending
   useEffect(() => {
@@ -52,64 +46,33 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  const handleDigitChange = (text: string, index: number) => {
+  const handleCheckEmailVerified = async () => {
+    setChecking(true);
     setError('');
     setInfoMessage('');
 
-    // Handle full paste of 6 digits
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length > 1) {
-      const newCode = [...code];
-      for (let i = 0; i < 6; i++) {
-        newCode[i] = cleaned[i] || '';
-      }
-      setCode(newCode);
-      const nextFocus = Math.min(cleaned.length, 5);
-      inputRefs.current[nextFocus]?.focus();
-      return;
-    }
-
-    const newCode = [...code];
-    newCode[index] = cleaned.slice(-1);
-    setCode(newCode);
-
-    // Auto-advance to next input if digit entered
-    if (cleaned && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
-    index: number
-  ) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerify = async () => {
-    const fullCode = code.join('').trim();
-    if (fullCode.length !== 6) {
-      setError('Please enter all 6 digits of the verification code');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
     try {
-      const result = await verifyEmailOtp(email, fullCode, flowType);
-      if (!result.success) {
-        setError(result.error || 'Invalid or expired verification code');
+      // 1. Refresh or check active session
+      const { data, error: sessionErr } = await supabase.auth.getSession();
+      if (data.session) {
+        onVerifySuccess();
         return;
       }
 
-      onVerifySuccess();
-    } catch (e: any) {
-      setError(e.message || 'Verification failed. Please try again.');
+      // 2. If user clicked the link in external browser, check user status
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user?.confirmed_at) {
+        onVerifySuccess();
+        return;
+      }
+
+      setInfoMessage(
+        'Please make sure you click the verification link in the email before continuing.'
+      );
+    } catch {
+      setError('Please click the confirmation link in your email to activate your account.');
     } finally {
-      setLoading(false);
+      setChecking(false);
     }
   };
 
@@ -121,14 +84,14 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
     try {
       const result = await resendOtp(email, flowType);
       if (!result.success) {
-        setError(result.error || 'Failed to resend verification code');
+        setError(result.error || 'Failed to resend verification email');
         return;
       }
 
-      setInfoMessage('A new verification code has been sent to your email.');
+      setInfoMessage('A fresh verification email has been sent to your inbox.');
       setCooldown(60);
     } catch (e: any) {
-      setError(e.message || 'Failed to resend verification code');
+      setError(e.message || 'Failed to resend verification email');
     } finally {
       setResending(false);
     }
@@ -137,50 +100,74 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   const isSignup = flowType === 'signup';
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? '#0B1120' : '#F8FAFC',
+          paddingTop: Math.max(insets.top, 16),
+          paddingBottom: Math.max(insets.bottom, 24),
+        },
+      ]}
     >
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: isDark ? '#111827' : '#F8FAFC',
-            paddingTop: Math.max(insets.top, 20),
-            paddingBottom: Math.max(insets.bottom, 20),
-          },
-        ]}
+      {/* Top Back Row */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={onBack}
+        style={styles.backRow}
       >
-        {/* Back navigation */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={onBack}
-          style={styles.backRow}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
-          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
-        </TouchableOpacity>
+        <Ionicons name="arrow-back" size={20} color={colors.text} />
+        <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
+      </TouchableOpacity>
 
-        <View style={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Main Verification Card */}
+        <View style={styles.contentCard}>
+          {/* Big Floating Email Icon */}
           <View
             style={[
               styles.iconBox,
-              { backgroundColor: isDark ? 'rgba(250, 204, 21, 0.15)' : '#FEF9C3' },
+              {
+                backgroundColor: isDark
+                  ? 'rgba(250, 204, 21, 0.15)'
+                  : '#FEF9C3',
+                borderColor: isDark ? '#EAB308' : '#FACC15',
+              },
             ]}
           >
-            <Text style={styles.iconEmoji}>{isSignup ? '📧' : '🔑'}</Text>
+            <Text style={styles.iconEmoji}>{isSignup ? '📬' : '🔑'}</Text>
           </View>
 
+          {/* User Requested Header & Message */}
           <Text style={[styles.title, { color: colors.text }]}>
-            {isSignup ? 'Verify Your Email' : 'Verification Code'}
+            {isSignup ? 'Verify Your Email' : 'Reset Your Password'}
           </Text>
 
-          <Text style={[styles.instructions, { color: colors.textSecondary }]}>
-            We've sent a 6-digit confirmation code to{' '}
-            <Text style={{ fontWeight: '700', color: colors.text }}>
+          <Text style={[styles.mainNotice, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
+            We sent you a verification email, please verify your email.
+          </Text>
+
+          {/* Target Email Address Badge */}
+          <View
+            style={[
+              styles.emailBadge,
+              {
+                backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+                borderColor: isDark ? '#334155' : '#CBD5E1',
+              },
+            ]}
+          >
+            <Ionicons name="mail-outline" size={16} color="#FACC15" />
+            <Text style={[styles.emailBadgeText, { color: colors.text }]}>
               {email || 'your email'}
             </Text>
-            . Enter it below to proceed.
+          </View>
+
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Please check your inbox and click the verification link to activate your account.
           </Text>
 
           {/* Error Banner */}
@@ -223,71 +210,72 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
             </View>
           ) : null}
 
-          {/* 6 Digit Input Boxes */}
-          <View style={styles.otpRow}>
-            {code.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => {
-                  inputRefs.current[index] = ref;
-                }}
-                value={digit}
-                onChangeText={(text) => handleDigitChange(text, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={6}
-                selectTextOnFocus
-                autoFocus={index === 0}
-                style={[
-                  styles.otpBox,
-                  {
-                    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                    borderColor: digit
-                      ? '#FACC15'
-                      : isDark
-                      ? '#374151'
-                      : '#E2E8F0',
-                    color: colors.text,
-                  },
-                ]}
-              />
-            ))}
-          </View>
+          {/* Primary Action: I've Clicked the Link */}
+          <TouchableOpacity
+            style={styles.primaryVerifiedBtn}
+            onPress={handleCheckEmailVerified}
+            activeOpacity={0.8}
+            disabled={checking}
+          >
+            {checking ? (
+              <ActivityIndicator size="small" color="#0F172A" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={20} color="#0F172A" />
+                <Text style={styles.primaryVerifiedBtnText}>
+                  I've Clicked the Link in My Email ✓
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
 
-          <Button
-            title="Verify Code"
-            onPress={handleVerify}
-            loading={loading}
-            size="lg"
-            style={{ width: '100%', marginTop: Spacing.xl }}
-          />
-
-          <View style={styles.resendRow}>
-            <Text style={{ color: colors.textSecondary }}>
-              Didn't receive the code?{' '}
+          {/* Resend & Help Section */}
+          <View style={styles.helpSection}>
+            <Text style={[styles.helpHeading, { color: colors.textSecondary }]}>
+              Didn't receive the email?
             </Text>
+            <Text style={[styles.helpTip, { color: colors.textMuted }]}>
+              • Check your <Text style={{ fontWeight: '800' }}>Spam or Junk</Text> folder.
+            </Text>
+
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handleResend}
               disabled={cooldown > 0 || resending}
+              style={styles.resendBtn}
             >
+              <Ionicons
+                name="refresh-outline"
+                size={14}
+                color={cooldown > 0 ? colors.textMuted : '#FACC15'}
+              />
               <Text
                 style={[
-                  styles.resendLink,
+                  styles.resendText,
                   { color: cooldown > 0 ? colors.textMuted : '#FACC15' },
                 ]}
               >
                 {cooldown > 0
-                  ? `Resend in ${cooldown}s`
+                  ? `Resend email in ${cooldown}s`
                   : resending
-                  ? 'Sending...'
-                  : 'Resend'}
+                  ? 'Sending email...'
+                  : 'Resend verification email'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onBack}
+              style={{ marginTop: Spacing.lg }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.changeEmailText, { color: colors.textSecondary }]}>
+                Wrong email address? <Text style={{ color: '#38BDF8', fontWeight: '800' }}>Change email</Text>
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -300,41 +288,89 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.xs,
   },
   backText: {
     fontWeight: '700',
     fontSize: Typography.sizes.base,
   },
-  content: {
-    flex: 1,
-    alignItems: 'center',
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: Spacing.sm,
-    marginTop: -30,
+    paddingVertical: Spacing.md,
+  },
+  contentCard: {
+    alignItems: 'center',
   },
   iconBox: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
     marginBottom: Spacing.lg,
   },
   iconEmoji: {
-    fontSize: 40,
+    fontSize: 46,
   },
   title: {
     fontSize: Typography.sizes.xxl,
-    fontWeight: '800',
-    marginBottom: Spacing.sm,
+    fontWeight: '900',
+    marginBottom: 6,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  instructions: {
+  mainNotice: {
+    fontSize: Typography.sizes.base,
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: Spacing.md,
+    paddingHorizontal: 12,
+  },
+  emailBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+  },
+  emailBadgeText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: '800',
+  },
+  subtitle: {
     fontSize: Typography.sizes.sm,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.lg,
+    lineHeight: 20,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: 16,
+  },
+  primaryVerifiedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FACC15',
+    paddingVertical: 16,
+    borderRadius: BorderRadius.md,
+    width: '100%',
+    marginBottom: Spacing.xl,
+    shadowColor: '#FACC15',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  primaryVerifiedBtnText: {
+    color: '#0F172A',
+    fontSize: Typography.sizes.base,
+    fontWeight: '900',
   },
   errorCard: {
     flexDirection: 'row',
@@ -352,7 +388,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     flex: 1,
     lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   infoCard: {
     flexDirection: 'row',
@@ -370,29 +406,39 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     flex: 1,
     lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  otpRow: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
+  helpSection: {
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
     width: '100%',
   },
-  otpBox: {
-    width: 46,
-    height: 54,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    textAlign: 'center',
-    fontSize: Typography.sizes.xl,
-    fontWeight: '800',
+  helpHeading: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  resendRow: {
+  helpTip: {
+    fontSize: Typography.sizes.xs,
+    marginBottom: Spacing.md,
+  },
+  resendBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.lg,
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
-  resendLink: {
+  resendText: {
+    fontSize: Typography.sizes.xs,
     fontWeight: '800',
+  },
+  changeEmailText: {
+    fontSize: Typography.sizes.xs,
   },
 });
