@@ -1,0 +1,103 @@
+export const Colors = {
+  light: {
+    primary: '#EAB308', // JS Yellow
+    primaryHover: '#CA8A04',
+    primaryLight: '#FEF9C3',
+    primaryText: '#854D0E',
+    background: '#F8FAFC',
+    surface: '#FFFFFF',
+    surfaceVariant: '#F1F5F9',
+    card: '#FFFFFF',
+    border: '#E2E8F0',
+    borderFocused: '#FACC15',
+    text: '#0F172A',
+    textSecondary: '#64748B',
+    textMuted: '#94A3B8',
+    success: '#22C55E',
+    successBg: '#DCFCE7',
+    successText: '#15803D',
+    danger: '#EF4444',
+    dangerBg: '#FEE2E2',
+    dangerText: '#B91C1C',
+    warning: '#F59E0B',
+    warningBg: '#FEF3C7',
+    warningText: '#B45309',
+    info: '#3B82F6',
+    infoBg: '#DBEAFE',
+    infoText: '#1D4ED8',
+    codeBg: '#1E293B',
+    codeText: '#F8FAFC',
+    tabBarBg: '#FFFFFF',
+    tabBarBorder: '#E2E8F0',
+  },
+  dark: {
+    primary: '#FACC15',
+    primaryHover: '#EAB308',
+    primaryLight: 'rgba(250, 204, 21, 0.15)',
+    primaryText: '#FEF08A',
+    background: '#111827',
+    surface: '#1F2937',
+    surfaceVariant: '#374151',
+    card: '#1F2937',
+    border: '#374151',
+    borderFocused: '#FACC15',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    success: '#22C55E',
+    successBg: 'rgba(34, 197, 94, 0.18)',
+    successText: '#86EFAC',
+    danger: '#EF4444',
+    dangerBg: 'rgba(239, 68, 68, 0.18)',
+    dangerText: '#FCA5A5',
+    warning: '#F59E0B',
+    warningBg: 'rgba(245, 158, 11, 0.18)',
+    warningText: '#FDE047',
+    info: '#60A5FA',
+    infoBg: 'rgba(59, 130, 246, 0.18)',
+    infoText: '#93C5FD',
+    codeBg: '#0F172A',
+    codeText: '#F8FAFC',
+    tabBarBg: '#1F2937',
+    tabBarBorder: '#374151',
+  }
+};
+
+export const Typography = {
+  fontFamily: {
+    regular: 'System',
+    medium: 'System',
+    bold: 'System',
+    code: 'monospace',
+  },
+  sizes: {
+    xs: 11,
+    sm: 13,
+    base: 15,
+    md: 17,
+    lg: 20,
+    xl: 24,
+    xxl: 28,
+    display: 34,
+  }
+};
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  base: 16,
+  lg: 20,
+  xl: 24,
+  xxl: 32,
+  screenPadding: 20,
+};
+
+export const BorderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  pill: 9999,
+};
+

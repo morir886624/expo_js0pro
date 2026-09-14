@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile-anti",
-    "slug": "mobile-anti",
+    "name": "JS0pro",
+    "slug": "js0pro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
