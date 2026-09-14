@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -20,31 +20,51 @@ interface GamesScreenProps {
   onOpenUpgradeModal: () => void;
 }
 
+const CATEGORIES = [
+  { id: 'all', label: '🌟 All Games' },
+  { id: 'css', label: '🐸 CSS & Flexbox' },
+  { id: 'arrays', label: '🐾 Arrays & Data' },
+  { id: 'logic', label: '🥕 Logic & Gates' },
+  { id: 'loops', label: '🐝 Loops & Hive' },
+  { id: 'async', label: '⚡ Async & Pro' },
+  { id: 'quiz', label: '⏱️ Speed Quizzes' },
+];
+
 export const GamesScreen: React.FC<GamesScreenProps> = ({
   onPlayGame,
   onOpenUpgradeModal,
 }) => {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const freeGames = GAMES_DATA.filter((g) => !g.isPro);
-  const proGames = GAMES_DATA.filter((g) => g.isPro);
+  // Filter games according to category
+  const filteredGames = GAMES_DATA.filter((game) => {
+    if (activeCategory === 'all') return true;
+    if (activeCategory === 'css') return game.gameType === 'flexbox';
+    if (activeCategory === 'arrays') return game.gameType === 'array_rescue';
+    if (activeCategory === 'logic') return game.gameType === 'conditional_quest';
+    if (activeCategory === 'loops') return game.gameType === 'loop_hive';
+    if (activeCategory === 'async') return game.gameType === 'async_race' || game.isPro;
+    if (activeCategory === 'quiz') return game.gameType === 'quiz';
+    return true;
+  });
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? '#111827' : '#F8FAFC',
+          backgroundColor: isDark ? '#0B1120' : '#F8FAFC',
           paddingTop: Math.max(insets.top, 16),
         },
       ]}
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Games 🎮</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Coding Games 🎮</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Learn JavaScript while having fun
+          Master web layout & JavaScript with interactive animal puzzles
         </Text>
       </View>
 
@@ -52,175 +72,279 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Stats Strip (Figma Style) */}
+        {/* Stats Strip */}
         <Card
           style={[
             styles.statsCard,
             {
-              backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-              borderColor: isDark ? '#374151' : '#E2E8F0',
+              backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+              borderColor: isDark ? '#334155' : '#E2E8F0',
             },
           ]}
         >
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>3</Text>
+            <Text style={styles.statValue}>15</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Completed
+              Levels Done
             </Text>
           </View>
           <View
             style={[
               styles.statDivider,
-              { backgroundColor: isDark ? '#374151' : '#E2E8F0' },
+              { backgroundColor: isDark ? '#334155' : '#E2E8F0' },
             ]}
           />
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: '#FACC15' }]}>850</Text>
+            <Text style={[styles.statValue, { color: '#FACC15' }]}>1,450</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Best score
+              Best Score
             </Text>
           </View>
           <View
             style={[
               styles.statDivider,
-              { backgroundColor: isDark ? '#374151' : '#E2E8F0' },
+              { backgroundColor: isDark ? '#334155' : '#E2E8F0' },
             ]}
           />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>90 XP</Text>
+            <Text style={styles.statValue}>240 XP</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Earned
             </Text>
           </View>
         </Card>
 
-        {/* Free Games Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            🆓 Free Games
+        {/* Educational "Frog CSS & Animal Games" Hero Callout */}
+        <View
+          style={[
+            styles.calloutCard,
+            {
+              backgroundColor: isDark
+                ? 'rgba(34, 197, 94, 0.12)'
+                : '#DCFCE7',
+              borderColor: isDark ? '#15803D' : '#86EFAC',
+            },
+          ]}
+        >
+          <View style={styles.calloutTop}>
+            <Text style={{ fontSize: 28 }}>🐸🐾✨</Text>
+            <View style={styles.calloutTag}>
+              <Text style={styles.calloutTagText}>FROG CSS ENGINE</Text>
+            </View>
+          </View>
+          <Text
+            style={[
+              styles.calloutTitle,
+              { color: isDark ? '#86EFAC' : '#15803D' },
+            ]}
+          >
+            Live Visual Coding with Animal Friends!
+          </Text>
+          <Text
+            style={[
+              styles.calloutText,
+              { color: isDark ? '#CBD5E1' : '#334155' },
+            ]}
+          >
+            Guide frogs, cats, monkeys, penguins, and foxes using live Flexbox, array transformations, and conditionals. Watch them react in real time!
           </Text>
         </View>
 
-        <View style={styles.gamesList}>
-          {freeGames.map((game) => (
-            <Card
-              key={game.id}
-              style={[
-                styles.gameCard,
-                {
-                  backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                  borderColor: isDark ? '#374151' : '#E2E8F0',
-                },
-              ]}
-            >
-              <View style={styles.gameTopRow}>
-                <View
+        {/* Category Filter Chips Horizontal Scroll */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesScroll}
+        >
+          {CATEGORIES.map((cat) => {
+            const isSelected = activeCategory === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                onPress={() => setActiveCategory(cat.id)}
+                activeOpacity={0.7}
+                style={[
+                  styles.categoryChip,
+                  {
+                    backgroundColor: isSelected
+                      ? '#FACC15'
+                      : isDark
+                      ? '#1E293B'
+                      : '#FFFFFF',
+                    borderColor: isSelected
+                      ? '#EAB308'
+                      : isDark
+                      ? '#334155'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.gameIconBox,
-                    { backgroundColor: 'rgba(250, 204, 21, 0.15)' },
+                    styles.categoryChipText,
+                    {
+                      color: isSelected ? '#0F172A' : colors.text,
+                      fontWeight: isSelected ? '900' : '600',
+                    },
                   ]}
                 >
-                  <Text style={{ fontSize: 32 }}>{game.icon}</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <View style={styles.gameBadgeRow}>
-                    <Badge label={game.category.toUpperCase()} variant="primary" size="sm" />
-                    <Text style={[styles.xpText, { color: '#FACC15' }]}>
-                      +{game.xpReward} XP
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Games List */}
+        <View style={styles.gamesList}>
+          {filteredGames.map((game) => {
+            const isProLocked = game.isPro;
+
+            return (
+              <Card
+                key={game.id}
+                style={[
+                  styles.gameCard,
+                  {
+                    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                    borderColor: isProLocked
+                      ? isDark
+                        ? '#7C3AED'
+                        : '#DDD6FE'
+                      : isDark
+                      ? '#334155'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                {/* Pro Badge if applicable */}
+                {isProLocked && (
+                  <View style={styles.proBadge}>
+                    <Text style={styles.proBadgeText}>PRO 👑</Text>
+                  </View>
+                )}
+
+                {/* Top Row: Mascot Icon + Titles */}
+                <View style={styles.gameTopRow}>
+                  <View
+                    style={[
+                      styles.gameIconBox,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(255, 255, 255, 0.06)'
+                          : 'rgba(0, 0, 0, 0.04)',
+                        borderColor: game.accentColor,
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 32 }}>{game.icon}</Text>
+                  </View>
+
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={styles.gameBadgeRow}>
+                      <Badge
+                        label={game.badgeLabel || game.category.toUpperCase()}
+                        variant={isProLocked ? 'info' : 'primary'}
+                        size="sm"
+                      />
+                      <Text
+                        style={[
+                          styles.xpText,
+                          { color: game.accentColor || '#FACC15' },
+                        ]}
+                      >
+                        +{game.xpReward} XP
+                      </Text>
+                    </View>
+
+                    <Text style={[styles.gameTitle, { color: colors.text }]}>
+                      {game.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.gameSubtitle,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {game.subtitle}
                     </Text>
                   </View>
-                  <Text style={[styles.gameTitle, { color: colors.text }]}>
-                    {game.title}
-                  </Text>
-                  <Text
-                    style={[styles.gameSubtitle, { color: colors.textSecondary }]}
-                  >
-                    {game.subtitle}
-                  </Text>
-                </View>
-              </View>
-
-              <Text
-                style={[styles.gameDescription, { color: colors.textSecondary }]}
-              >
-                {game.description}
-              </Text>
-
-              <View style={styles.gameFooter}>
-                <View style={styles.scoreRow}>
-                  <Text style={[styles.highScoreLabel, { color: colors.textMuted }]}>
-                    High Score:
-                  </Text>
-                  <Text style={[styles.highScoreValue, { color: colors.text }]}>
-                    {' '}{game.highScore}
-                  </Text>
                 </View>
 
-                <Button
-                  title="Play Now ⚡"
-                  onPress={() => onPlayGame(game)}
-                  size="sm"
-                  style={styles.playBtn}
-                />
-              </View>
-            </Card>
-          ))}
-        </View>
+                {/* Animal Mascots Strip */}
+                {game.mascots && game.mascots.length > 0 && (
+                  <View style={styles.mascotsStrip}>
+                    <Text style={styles.mascotsLabel}>Mascots:</Text>
+                    <View style={styles.mascotsRow}>
+                      {game.mascots.map((m, idx) => (
+                        <Text key={idx} style={styles.mascotEmoji}>
+                          {m}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
 
-        {/* Premium Games Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            👑 Pro Games
-          </Text>
-        </View>
-
-        <View style={styles.gamesList}>
-          {proGames.map((game) => (
-            <TouchableOpacity
-              key={game.id}
-              activeOpacity={0.8}
-              onPress={onOpenUpgradeModal}
-              style={[
-                styles.proGameCard,
-                {
-                  backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                  borderColor: isDark ? '#4C1D95' : '#DDD6FE',
-                },
-              ]}
-            >
-              <View style={styles.proCardBadge}>
-                <Text style={styles.proCardBadgeText}>PRO ONLY 👑</Text>
-              </View>
-
-              <View style={styles.gameTopRow}>
-                <View
+                {/* Description */}
+                <Text
                   style={[
-                    styles.gameIconBox,
-                    { backgroundColor: 'rgba(168, 85, 247, 0.15)' },
+                    styles.gameDescription,
+                    { color: colors.textSecondary },
                   ]}
                 >
-                  <Text style={{ fontSize: 32 }}>{game.icon}</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={[styles.gameTitle, { color: colors.text }]}>
-                    {game.title}
-                  </Text>
-                  <Text
-                    style={[styles.gameSubtitle, { color: colors.textSecondary }]}
-                  >
-                    {game.description}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.unlockProRow}>
-                <Text style={styles.unlockProText}>
-                  Upgrade to JS0pro to unlock all pro challenges
+                  {game.description}
                 </Text>
-                <Ionicons name="lock-closed" size={16} color="#A855F7" />
-              </View>
-            </TouchableOpacity>
-          ))}
+
+                {/* Curriculum Tag */}
+                {game.curriculumModulesTag ? (
+                  <View
+                    style={[
+                      styles.curriculumTagBox,
+                      { backgroundColor: isDark ? '#0F172A' : '#F1F5F9' },
+                    ]}
+                  >
+                    <Ionicons name="school" size={12} color="#38BDF8" />
+                    <Text style={styles.curriculumTagText}>
+                      {game.curriculumModulesTag}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Footer: Level Count + Play Action */}
+                <View style={styles.gameFooter}>
+                  <View style={styles.scoreRow}>
+                    <Ionicons
+                      name="layers-outline"
+                      size={14}
+                      color={colors.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.highScoreValue,
+                        { color: colors.text, marginLeft: 4 },
+                      ]}
+                    >
+                      {game.totalLevels || 5} Levels
+                    </Text>
+                  </View>
+
+                  <Button
+                    title={isProLocked ? 'Unlock with Pro 👑' : 'Play Level 1 ⚡'}
+                    onPress={() => {
+                      if (isProLocked) {
+                        onOpenUpgradeModal();
+                      } else {
+                        onPlayGame(game);
+                      }
+                    }}
+                    size="sm"
+                    variant={isProLocked ? 'secondary' : 'primary'}
+                    style={styles.playBtn}
+                  />
+                </View>
+              </Card>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -233,11 +357,11 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.screenPadding,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   title: {
     fontSize: Typography.sizes.xxl,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -253,7 +377,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingVertical: Spacing.md,
-    marginBottom: Spacing.base,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   statItem: {
     alignItems: 'center',
@@ -273,18 +398,76 @@ const styles = StyleSheet.create({
     width: 1,
     height: 32,
   },
-  sectionHeader: {
-    marginVertical: Spacing.md,
+  calloutCard: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
+    padding: Spacing.base,
+    marginBottom: Spacing.md,
   },
-  sectionTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: '800',
+  calloutTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  calloutTag: {
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.pill,
+  },
+  calloutTagText: {
+    color: '#15803D',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  calloutTitle: {
+    fontSize: Typography.sizes.base,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  calloutText: {
+    fontSize: Typography.sizes.xs,
+    lineHeight: 18,
+  },
+  categoriesScroll: {
+    gap: 8,
+    paddingBottom: Spacing.sm,
+  },
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+  },
+  categoryChipText: {
+    fontSize: 12,
   },
   gamesList: {
-    gap: 12,
+    gap: 14,
+    marginTop: 4,
   },
   gameCard: {
     padding: Spacing.base,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  proBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#9333EA',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderBottomLeftRadius: 10,
+    zIndex: 10,
+  },
+  proBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   gameTopRow: {
     flexDirection: 'row',
@@ -293,7 +476,8 @@ const styles = StyleSheet.create({
   gameIconBox: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -309,16 +493,49 @@ const styles = StyleSheet.create({
   },
   gameTitle: {
     fontSize: Typography.sizes.base,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   gameSubtitle: {
     fontSize: Typography.sizes.xs,
     marginTop: 1,
   },
+  mascotsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  mascotsLabel: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  mascotsRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  mascotEmoji: {
+    fontSize: 16,
+  },
   gameDescription: {
     fontSize: Typography.sizes.sm,
     lineHeight: 20,
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
+  },
+  curriculumTagBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: Spacing.sm,
+  },
+  curriculumTagText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '700',
   },
   gameFooter: {
     flexDirection: 'row',
@@ -330,51 +547,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  highScoreLabel: {
-    fontSize: Typography.sizes.xs,
-  },
   highScoreValue: {
     fontSize: Typography.sizes.xs,
     fontWeight: '800',
   },
   playBtn: {
-    paddingHorizontal: 16,
-  },
-  proGameCard: {
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
-    padding: Spacing.base,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  proCardBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: '#9333EA',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderBottomLeftRadius: 10,
-  },
-  proCardBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  unlockProRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.md,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(168, 85, 247, 0.2)',
-  },
-  unlockProText: {
-    color: '#A855F7',
-    fontSize: Typography.sizes.xs,
-    fontWeight: '700',
+    paddingHorizontal: 14,
   },
 });
-

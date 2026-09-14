@@ -1,6 +1,8 @@
 export * from './curriculum';
+export * from './animalGamesData';
+import { ANIMAL_GAMES_COLLECTION, AnimalGame } from './animalGamesData';
 
-export interface Game {
+export interface Game extends Partial<AnimalGame> {
   id: string;
   title: string;
   subtitle: string;
@@ -8,12 +10,12 @@ export interface Game {
   icon: string;
   category: string;
   isPro: boolean;
-  questionsCount: number;
+  questionsCount?: number;
   xpReward: number;
   highScore: number;
   completedTimes: number;
   accentColor: string;
-  questions: {
+  questions?: {
     id: string;
     question: string;
     code?: string;
@@ -33,134 +35,85 @@ export interface AppNotification {
   category: 'xp' | 'lesson' | 'streak' | 'achievement';
 }
 
-export const GAMES_DATA: Game[] = [
+const VARIABLES_QUESTIONS = [
   {
-    id: 'game_1',
-    title: 'Variables Rush',
-    subtitle: 'Free Game · Speed Quiz',
-    description: 'Match variable keywords, types and scope under time pressure!',
-    icon: '⚡',
-    category: 'Fundamentals',
-    isPro: false,
-    questionsCount: 5,
-    xpReward: 50,
-    highScore: 850,
-    completedTimes: 3,
-    accentColor: '#FACC15',
-    questions: [
-      {
-        id: 'g1_q1',
-        question: 'What is the output of: let a = 5; let b = a; b = 10; console.log(a)?',
-        options: ['10', '5', 'undefined', 'NaN'],
-        correctIndex: 1,
-        explanation: 'Primitive numbers are copied by value, so changing b does not modify a.',
-      },
-      {
-        id: 'g1_q2',
-        question: 'Can you re-assign a variable declared with const?',
-        options: ['Yes, always', 'No, never', 'Only in strict mode', 'Only inside functions'],
-        correctIndex: 1,
-        explanation: 'const identifiers cannot be reassigned.',
-      },
-      {
-        id: 'g1_q3',
-        question: 'Which keyword creates function-scoped variables?',
-        options: ['let', 'const', 'var', 'static'],
-        correctIndex: 2,
-        explanation: 'var is function-scoped (or globally scoped), not block-scoped.',
-      },
-      {
-        id: 'g1_q4',
-        question: 'What will typeof NaN return?',
-        options: ['"NaN"', '"undefined"', '"number"', '"object"'],
-        correctIndex: 2,
-        explanation: 'In JavaScript, NaN stands for Not-a-Number, but its type is technically "number"!',
-      },
-      {
-        id: 'g1_q5',
-        question: 'What is the value of Boolean("")?',
-        options: ['true', 'false', 'null', 'undefined'],
-        correctIndex: 1,
-        explanation: 'An empty string is falsy in JavaScript.',
-      },
-    ],
+    id: 'g1_q1',
+    question: 'What is the output of: let a = 5; let b = a; b = 10; console.log(a)?',
+    options: ['10', '5', 'undefined', 'NaN'],
+    correctIndex: 1,
+    explanation: 'Primitive numbers are copied by value, so changing b does not modify a.',
   },
   {
-    id: 'game_2',
-    title: 'Bug Hunter',
-    subtitle: 'Free Game · Code Inspection',
-    description: 'Spot syntax errors and logical traps before the timer runs out.',
-    icon: '🐛',
-    category: 'Debugging',
-    isPro: false,
-    questionsCount: 5,
-    xpReward: 60,
-    highScore: 720,
-    completedTimes: 1,
-    accentColor: '#22C55E',
-    questions: [
-      {
-        id: 'g2_q1',
-        question: 'Find the bug in this snippet:',
-        code: 'const count = 0;\ncount++;\nconsole.log(count);',
-        options: [
-          'console.log is misnamed',
-          'Attempted reassignment of const variable',
-          'Missing semicolon on line 1',
-          'count++ is not valid in JS',
-        ],
-        correctIndex: 1,
-        explanation: 'count++ attempts to reassign a const variable, causing a TypeError.',
-      },
-      {
-        id: 'g2_q2',
-        question: 'What does this expression return?',
-        code: '[1, 2, 3] + [4, 5, 6]',
-        options: ['[1, 2, 3, 4, 5, 6]', '"1,2,34,5,6"', 'NaN', 'TypeError'],
-        correctIndex: 1,
-        explanation: 'Arrays are coerced into strings when using the + operator: "1,2,3" + "4,5,6".',
-      },
-      {
-        id: 'g2_q3',
-        question: 'What is printed to the console?',
-        code: 'console.log(0.1 + 0.2 === 0.3);',
-        options: ['true', 'false', 'undefined', 'NaN'],
-        correctIndex: 1,
-        explanation: 'Due to IEEE 754 floating point arithmetic, 0.1 + 0.2 equals 0.30000000000000004.',
-      },
-    ],
+    id: 'g1_q2',
+    question: 'Can you re-assign a variable declared with const?',
+    options: ['Yes, always', 'No, never', 'Only in strict mode', 'Only inside functions'],
+    correctIndex: 1,
+    explanation: 'const identifiers cannot be reassigned.',
   },
   {
-    id: 'game_3',
-    title: 'Array Master',
-    subtitle: 'Pro Game · Transformations',
-    description: 'Chain map, filter, and reduce to solve high-intensity code puzzles.',
-    icon: '👑',
-    category: 'Algorithms',
-    isPro: true,
-    questionsCount: 10,
-    xpReward: 120,
-    highScore: 0,
-    completedTimes: 0,
-    accentColor: '#A855F7',
-    questions: [],
+    id: 'g1_q3',
+    question: 'Which keyword creates function-scoped variables?',
+    options: ['let', 'const', 'var', 'static'],
+    correctIndex: 2,
+    explanation: 'var is function-scoped (or globally scoped), not block-scoped.',
   },
   {
-    id: 'game_4',
-    title: 'Async Arena',
-    subtitle: 'Pro Game · Event Loop',
-    description: 'Master microtasks, macrotasks, Promises, and the JavaScript Event Loop.',
-    icon: '⚡',
-    category: 'Advanced',
-    isPro: true,
-    questionsCount: 10,
-    xpReward: 150,
-    highScore: 0,
-    completedTimes: 0,
-    accentColor: '#EC4899',
-    questions: [],
+    id: 'g1_q4',
+    question: 'What will typeof NaN return?',
+    options: ['"NaN"', '"undefined"', '"number"', '"object"'],
+    correctIndex: 2,
+    explanation: 'In JavaScript, NaN stands for Not-a-Number, but its type is technically "number"!',
+  },
+  {
+    id: 'g1_q5',
+    question: 'What is the value of Boolean("")?',
+    options: ['true', 'false', 'null', 'undefined'],
+    correctIndex: 1,
+    explanation: 'An empty string is falsy in JavaScript.',
   },
 ];
+
+const BUG_HUNTER_QUESTIONS = [
+  {
+    id: 'g2_q1',
+    question: 'Find the bug in this snippet:',
+    code: 'const count = 0;\ncount++;\nconsole.log(count);',
+    options: [
+      'console.log is misnamed',
+      'Attempted reassignment of const variable',
+      'Missing semicolon on line 1',
+      'count++ is not valid in JS',
+    ],
+    correctIndex: 1,
+    explanation: 'count++ attempts to reassign a const variable, causing a TypeError.',
+  },
+  {
+    id: 'g2_q2',
+    question: 'What does this expression return?',
+    code: '[1, 2, 3] + [4, 5, 6]',
+    options: ['[1, 2, 3, 4, 5, 6]', '"1,2,34,5,6"', 'NaN', 'TypeError'],
+    correctIndex: 1,
+    explanation: 'Arrays are coerced into strings when using the + operator: "1,2,3" + "4,5,6".',
+  },
+  {
+    id: 'g2_q3',
+    question: 'What is printed to the console?',
+    code: 'console.log(0.1 + 0.2 === 0.3);',
+    options: ['true', 'false', 'undefined', 'NaN'],
+    correctIndex: 1,
+    explanation: 'Due to IEEE 754 floating point arithmetic, 0.1 + 0.2 equals 0.30000000000000004.',
+  },
+];
+
+export const GAMES_DATA: Game[] = ANIMAL_GAMES_COLLECTION.map((g) => {
+  if (g.id === 'game_variables_rush') {
+    return { ...g, questions: VARIABLES_QUESTIONS, questionsCount: 5 };
+  }
+  if (g.id === 'game_bug_hunter') {
+    return { ...g, questions: BUG_HUNTER_QUESTIONS, questionsCount: 3 };
+  }
+  return { ...g, questions: g.questions || [] };
+});
 
 export const NOTIFICATIONS_DATA: AppNotification[] = [
   {

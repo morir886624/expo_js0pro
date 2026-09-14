@@ -231,7 +231,16 @@ export const RootNavigator: React.FC = () => {
         game={selectedGame}
         onClose={() => setActiveModal('none')}
         onReviewLesson={() => {
-          const mod = MODULES_DATA[0];
+          let mod = MODULES_DATA[0];
+          if (selectedGame.gameType === 'array_rescue') {
+            mod = MODULES_DATA[6] || MODULES_DATA[0];
+          } else if (selectedGame.gameType === 'conditional_quest') {
+            mod = MODULES_DATA[3] || MODULES_DATA[0];
+          } else if (selectedGame.gameType === 'loop_hive') {
+            mod = MODULES_DATA[4] || MODULES_DATA[0];
+          } else if (selectedGame.gameType === 'async_race') {
+            mod = MODULES_DATA[15] || MODULES_DATA[0];
+          }
           setSelectedModule(mod);
           setActiveModal('module_detail');
         }}
