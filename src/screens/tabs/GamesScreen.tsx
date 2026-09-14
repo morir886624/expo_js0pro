@@ -21,13 +21,14 @@ interface GamesScreenProps {
 }
 
 const CATEGORIES = [
-  { id: 'all', label: '🌟 All Games' },
-  { id: 'css', label: '🐸 CSS & Flexbox' },
-  { id: 'arrays', label: '🐾 Arrays & Data' },
-  { id: 'logic', label: '🥕 Logic & Gates' },
-  { id: 'loops', label: '🐝 Loops & Hive' },
-  { id: 'async', label: '⚡ Async & Pro' },
-  { id: 'quiz', label: '⏱️ Speed Quizzes' },
+  { id: 'all', label: '🌟 All JS Games' },
+  { id: 'froggy', label: '🐸 Froggy JS (Tier 1)' },
+  { id: 'arrays', label: '🐾 Array Zoo (Tier 2/3)' },
+  { id: 'objects', label: '🦁 Object Safari (Tier 2/3)' },
+  { id: 'logic', label: '🥕 Conditionals (Tier 1)' },
+  { id: 'loops', label: '🐝 Loops & Hive (Tier 1)' },
+  { id: 'async', label: '⚡ Async Race (Tier 4)' },
+  { id: 'quiz', label: '⏱️ Speed Blitz' },
 ];
 
 export const GamesScreen: React.FC<GamesScreenProps> = ({
@@ -41,8 +42,9 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
   // Filter games according to category
   const filteredGames = GAMES_DATA.filter((game) => {
     if (activeCategory === 'all') return true;
-    if (activeCategory === 'css') return game.gameType === 'flexbox';
+    if (activeCategory === 'froggy') return game.gameType === 'froggy_js';
     if (activeCategory === 'arrays') return game.gameType === 'array_rescue';
+    if (activeCategory === 'objects') return game.gameType === 'object_safari';
     if (activeCategory === 'logic') return game.gameType === 'conditional_quest';
     if (activeCategory === 'loops') return game.gameType === 'loop_hive';
     if (activeCategory === 'async') return game.gameType === 'async_race' || game.isPro;
@@ -62,9 +64,9 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Coding Games 🎮</Text>
+        <Text style={[styles.title, { color: colors.text }]}>JS Coding Games 🎮</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Master web layout & JavaScript with interactive animal puzzles
+          Practice JavaScript from 0 to 100 with interactive animal puzzles
         </Text>
       </View>
 
@@ -129,7 +131,7 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
           <View style={styles.calloutTop}>
             <Text style={{ fontSize: 28 }}>🐸🐾✨</Text>
             <View style={styles.calloutTag}>
-              <Text style={styles.calloutTagText}>FROG CSS ENGINE</Text>
+              <Text style={styles.calloutTagText}>100% PURE JAVASCRIPT</Text>
             </View>
           </View>
           <Text
@@ -138,7 +140,7 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
               { color: isDark ? '#86EFAC' : '#15803D' },
             ]}
           >
-            Live Visual Coding with Animal Friends!
+            Master JavaScript from Lesson 1 to 100!
           </Text>
           <Text
             style={[
@@ -146,7 +148,7 @@ export const GamesScreen: React.FC<GamesScreenProps> = ({
               { color: isDark ? '#CBD5E1' : '#334155' },
             ]}
           >
-            Guide frogs, cats, monkeys, penguins, and foxes using live Flexbox, array transformations, and conditionals. Watch them react in real time!
+            Guide frogs, ducks, pandas, bees, and cheetahs using pure JavaScript method calls, array methods, conditionals, loops, objects, and the event loop. Real-time visual coding!
           </Text>
         </View>
 

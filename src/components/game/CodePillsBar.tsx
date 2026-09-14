@@ -54,7 +54,7 @@ export const CodePillsBar: React.FC<CodePillsBarProps> = ({
           <View style={[styles.macDot, { backgroundColor: '#EF4444' }]} />
           <View style={[styles.macDot, { backgroundColor: '#FACC15' }]} />
           <View style={[styles.macDot, { backgroundColor: '#22C55E' }]} />
-          <Text style={styles.editorFileText}>styles.css / code.js</Text>
+          <Text style={styles.editorFileText}>script.js</Text>
         </View>
 
         {onReset && (
@@ -78,7 +78,7 @@ export const CodePillsBar: React.FC<CodePillsBarProps> = ({
         </View>
 
         <View style={styles.codeLinesContent}>
-          <Text style={styles.codeComment}>/* Enter or tap property values */</Text>
+          <Text style={styles.codeComment}>// Enter or select JavaScript code</Text>
           <View style={styles.activeCodeRow}>
             {prefix ? <Text style={styles.codePrefix}>{prefix}</Text> : null}
             <TextInput
@@ -90,12 +90,11 @@ export const CodePillsBar: React.FC<CodePillsBarProps> = ({
               onChangeText={onChangeCode}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="property value..."
+              placeholder="expression..."
               placeholderTextColor="#64748B"
             />
             {suffix ? <Text style={styles.codeSuffix}>{suffix}</Text> : null}
           </View>
-          <Text style={styles.closingBrace}>{'}'}</Text>
         </View>
       </View>
 

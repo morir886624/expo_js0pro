@@ -1,48 +1,40 @@
-// Type definitions and complete level data for Animal Interactive Coding Games
-// Aligned with Flexbox Froggy mechanics and the 20-Module JavaScript Curriculum
+// Type definitions and complete level data for 100% Pure JavaScript Animal Coding Games
+// Covering the curriculum from Lesson 0 to 100 (Tier 1 to Tier 4)
 
 export type GameType =
-  | 'flexbox'
+  | 'froggy_js'
   | 'array_rescue'
+  | 'object_safari'
   | 'conditional_quest'
   | 'loop_hive'
   | 'async_race'
   | 'quiz';
 
-export interface AnimalTarget {
+export interface FroggyJSTarget {
   id: string;
-  species: string; // e.g., 'frog', 'cat', 'monkey', 'penguin', 'fox', 'duck', 'bunny', 'dog'
+  species: string; // e.g., 'frog', 'duck', 'turtle'
   emoji: string;
   name: string;
-  color: string;
-  targetEmoji: string; // e.g., '🟢' (lilypad), '🟡' (cushion), '🌴' (tree), '❄️' (ice), '🌲' (burrow)
+  targetIndex: number; // 0-indexed lilypad target position (0 to 4)
+  targetEmoji: string;
   targetLabel: string;
-  targetAlignSelf?: string;
 }
 
-export interface FlexboxLevel {
+export interface FroggyJSLevel {
   id: number;
   title: string;
   description: string;
   instructions: string;
-  habitatType: 'pond' | 'savannah' | 'arctic' | 'forest';
-  animals: AnimalTarget[];
-  // Expected container styles for winning the level
-  targetStyles: {
-    justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
-    alignItems?: 'flex-start' | 'flex-end' | 'center' | 'baseline' | 'stretch';
-    flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
-    flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-    gap?: number;
-  };
-  // Pre-filled initial properties
+  totalPads: number; // usually 5 lilypads across the pond
+  animals: FroggyJSTarget[];
+  contextVars: Record<string, any>;
+  expectedSnippet: string; // The canonical JavaScript expression/call
   initialCode: string;
-  // Available helper property token chips for mobile single-tap selection
   suggestedTokens: string[];
-  // Curriculum module alignment & MDN explanation hint
   curriculumModule: string;
   hint: string;
   mdnDoc: string;
+  validate: (code: string) => { isSuccess: boolean; targetPositions: number[]; message: string };
 }
 
 export interface ArrayAnimal {
@@ -70,6 +62,20 @@ export interface ArrayRescueLevel {
   validate: (code: string) => { isSuccess: boolean; resultingAnimals: ArrayAnimal[]; message: string };
   curriculumModule: string;
   hint: string;
+}
+
+export interface ObjectSafariLevel {
+  id: number;
+  title: string;
+  description: string;
+  instructions: string;
+  animalObj: Record<string, any>;
+  expectedSnippet: string;
+  initialCode: string;
+  suggestedTokens: string[];
+  curriculumModule: string;
+  hint: string;
+  validate: (code: string) => { isSuccess: boolean; outputText: string; message: string };
 }
 
 export interface ConditionalLevel {
@@ -129,252 +135,319 @@ export interface AnimalGame {
   completedTimes: number;
   accentColor: string;
   badgeLabel: string;
-  flexboxLevels?: FlexboxLevel[];
+  froggyLevels?: FroggyJSLevel[];
   arrayRescueLevels?: ArrayRescueLevel[];
+  objectSafariLevels?: ObjectSafariLevel[];
   conditionalLevels?: ConditionalLevel[];
   loopLevels?: LoopLevel[];
   asyncLevels?: AsyncLevel[];
-  questions?: any[]; // For legacy or quiz modes
+  questions?: any[]; // For rapid speed quiz mode
 }
 
 // --------------------------------------------------------------------------------
-// 1. FLEXBOX SAFARI LEVELS (Identical mechanics to Flexbox Froggy with diverse animals)
+// 1. FROGGY JS LEVELS (Pure JavaScript Method Calls, Math, Coordinates & Arrays)
 // --------------------------------------------------------------------------------
-export const FLEXBOX_SAFARI_LEVELS: FlexboxLevel[] = [
+export const FROGGY_JS_LEVELS: FroggyJSLevel[] = [
   {
     id: 1,
-    title: 'Level 1: Frog to Lilypad',
-    description: 'Guide the frog 🐸 to the lilypad on the right using justifyContent.',
-    instructions: 'Use `justifyContent: flex-end` to align the frog to the right side of the pond.',
-    habitatType: 'pond',
+    title: 'Leap 1: Method Call with Parameter',
+    description: 'Call the frog method `hop(3)` to leap 3 lilypads forward onto pad #3.',
+    instructions: 'Invoke the method `frog.hop(3)` to advance the frog to the target lilypad.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'frog', emoji: '🐸', name: 'Froggy', color: '#22C55E', targetEmoji: '🟢', targetLabel: 'Lilypad' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 3, targetEmoji: '🟢', targetLabel: 'Pad #3' },
     ],
-    targetStyles: {
-      justifyContent: 'flex-end',
+    contextVars: { startPad: 0, targetPad: 3 },
+    expectedSnippet: 'frog.hop(3)',
+    initialCode: 'frog.hop(',
+    suggestedTokens: ['3)', '2)', '4)', '1)'],
+    curriculumModule: 'Tier 1 Module 1: Calling Functions & Methods',
+    hint: 'Methods are invoked using dot syntax followed by parentheses and arguments: `frog.hop(3)`.',
+    mdnDoc: 'MDN: Calling functions and methods with parameters',
+    validate: (code: string) => {
+      const match = code.includes('3');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [3] : [0],
+        message: match ? 'Froggy leaped 3 pads straight onto the green lilypad!' : 'Try frog.hop(3) to reach pad 3.',
+      };
     },
-    initialCode: 'justifyContent: ',
-    suggestedTokens: ['flex-end', 'center', 'flex-start', 'space-between'],
-    curriculumModule: 'CSS & Flexbox Fundamentals (Web & React Native Layout)',
-    hint: '`justifyContent: flex-end` aligns children along the main axis to the right (end) of the container.',
-    mdnDoc: 'MDN: justify-content aligns flex items along the main axis.',
   },
   {
     id: 2,
-    title: 'Level 2: Ducks to Center Pond',
-    description: 'Guide the ducklings 🦆🦆 to their center ripples in the pond.',
-    instructions: 'Use `justifyContent: center` to float the two ducks into the middle.',
-    habitatType: 'pond',
+    title: 'Leap 2: 0-Indexed Lilypad Jump',
+    description: 'In JavaScript, array indexing starts at 0. Send the duckling 🦆 to `lilypads[1]`.',
+    instructions: 'Call `duck.jumpTo(lilypads[1])` to land on the second lilypad.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'duck', emoji: '🦆', name: 'Duckling 1', color: '#EAB308', targetEmoji: '🟡', targetLabel: 'Puddle' },
-      { id: 'a2', species: 'duck', emoji: '🦆', name: 'Duckling 2', color: '#EAB308', targetEmoji: '🟡', targetLabel: 'Puddle' },
+      { id: 'd1', species: 'duck', emoji: '🦆', name: 'Duckling', targetIndex: 1, targetEmoji: '🟡', targetLabel: 'Pad #1' },
     ],
-    targetStyles: {
-      justifyContent: 'center',
+    contextVars: { lilypads: ['pad0', 'pad1', 'pad2', 'pad3', 'pad4'] },
+    expectedSnippet: 'duck.jumpTo(lilypads[1])',
+    initialCode: 'duck.jumpTo(lilypads[',
+    suggestedTokens: ['1])', '2])', '0])', '3])'],
+    curriculumModule: 'Tier 1 Module 2 & Tier 2 Module 7: Zero-Indexed Arrays',
+    hint: 'The first element is at index 0, so the second element is at index 1: `lilypads[1]`.',
+    mdnDoc: 'MDN: Accessing array elements using indices',
+    validate: (code: string) => {
+      const match = code.includes('1');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [1] : [0],
+        message: match ? 'Duckling landed perfectly on lilypads[1]!' : 'Remember: 0 is first, 1 is second.',
+      };
     },
-    initialCode: 'justifyContent: ',
-    suggestedTokens: ['center', 'flex-end', 'space-around', 'space-between'],
-    curriculumModule: 'Flexbox Main Axis Alignment',
-    hint: '`justifyContent: center` clusters all flex items at the exact horizontal center of the container.',
-    mdnDoc: 'MDN: justify-content: center packs items around the center.',
   },
   {
     id: 3,
-    title: 'Level 3: Kittens on Cushions',
-    description: 'Help the kittens 🐱🐱🐱 spread out evenly on their cozy cushions.',
-    instructions: 'Use `justifyContent: space-around` so each kitten has equal space on both sides.',
-    habitatType: 'savannah',
+    title: 'Leap 3: Arithmetic Expression in Arguments',
+    description: 'Calculate jump distance: Froggy has energy = 40. Calculate `frog.hop(energy / 10)`.',
+    instructions: 'Use the expression `frog.hop(energy / 10)` which evaluates to 4.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'cat', emoji: '🐱', name: 'Cleo', color: '#F97316', targetEmoji: '🧶', targetLabel: 'Cushion' },
-      { id: 'a2', species: 'cat', emoji: '🐱', name: 'Milo', color: '#FB923C', targetEmoji: '🧶', targetLabel: 'Cushion' },
-      { id: 'a3', species: 'cat', emoji: '🐱', name: 'Luna', color: '#EA580C', targetEmoji: '🧶', targetLabel: 'Cushion' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 4, targetEmoji: '🟢', targetLabel: 'Pad #4' },
     ],
-    targetStyles: {
-      justifyContent: 'space-around',
+    contextVars: { energy: 40 },
+    expectedSnippet: 'frog.hop(energy / 10)',
+    initialCode: 'frog.hop(energy ',
+    suggestedTokens: ['/ 10)', '* 10)', '+ 10)', '- 10)'],
+    curriculumModule: 'Tier 1 Module 3: Expressions & Arithmetic Operators',
+    hint: 'You can pass any valid JavaScript math expression inside method arguments.',
+    mdnDoc: 'MDN: Arithmetic division operator (/)',
+    validate: (code: string) => {
+      const match = code.includes('/ 10') || code.includes('/10');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [4] : [0],
+        message: match ? '40 / 10 = 4! Froggy launched all the way to pad 4!' : 'Divide energy (40) by 10.',
+      };
     },
-    initialCode: 'justifyContent: ',
-    suggestedTokens: ['space-around', 'space-between', 'center', 'space-evenly'],
-    curriculumModule: 'Flexbox Distribution: space-around vs space-between',
-    hint: '`space-around` gives equal spacing around every item, leaving half-sized gaps at the outer edges.',
-    mdnDoc: 'MDN: justify-content: space-around distributes items evenly with equal margins.',
   },
   {
     id: 4,
-    title: 'Level 4: Penguins on Ice Floes',
-    description: 'Place the penguins 🐧🐧🐧 at the opposite ends of the glacier.',
-    instructions: 'Use `justifyContent: space-between` to push the outer penguins to the screen edges.',
-    habitatType: 'arctic',
+    title: 'Leap 4: Built-in Math.max()',
+    description: 'Use the standard JavaScript `Math.max(2, 4)` function to calculate the highest leap.',
+    instructions: 'Execute `frog.hop(Math.max(2, 4))` to land on pad #4.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'penguin', emoji: '🐧', name: 'Pippin', color: '#38BDF8', targetEmoji: '❄️', targetLabel: 'Ice Floe' },
-      { id: 'a2', species: 'penguin', emoji: '🐧', name: 'Percy', color: '#38BDF8', targetEmoji: '❄️', targetLabel: 'Ice Floe' },
-      { id: 'a3', species: 'penguin', emoji: '🐧', name: 'Penny', color: '#38BDF8', targetEmoji: '❄️', targetLabel: 'Ice Floe' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 4, targetEmoji: '🟢', targetLabel: 'Pad #4' },
     ],
-    targetStyles: {
-      justifyContent: 'space-between',
+    contextVars: { options: [2, 4] },
+    expectedSnippet: 'frog.hop(Math.max(2, 4))',
+    initialCode: 'frog.hop(Math.',
+    suggestedTokens: ['max(2, 4))', 'min(2, 4))', 'round(2.4))', 'floor(4.9))'],
+    curriculumModule: 'Tier 1 Module 3: The JavaScript Math Object',
+    hint: '`Math.max(a, b)` returns the largest of zero or more numbers.',
+    mdnDoc: 'MDN: Math.max() static method',
+    validate: (code: string) => {
+      const match = code.includes('max');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [4] : [0],
+        message: match ? 'Math.max(2, 4) returned 4! Target reached!' : 'Use Math.max(2, 4) to get 4.',
+      };
     },
-    initialCode: 'justifyContent: ',
-    suggestedTokens: ['space-between', 'space-around', 'flex-start', 'center'],
-    curriculumModule: 'Flexbox Edge Spacing',
-    hint: '`space-between` places the first item flush at the start, the last item flush at the end, and distributes the rest evenly.',
-    mdnDoc: 'MDN: justify-content: space-between leaves no margin at container edges.',
   },
   {
     id: 5,
-    title: 'Level 5: Frogs to Bottom Lilypads',
-    description: 'Move the frogs down to the lilypads at the bottom of the pond using cross-axis alignment.',
-    instructions: 'Use `alignItems: flex-end` to align the frogs along the cross axis.',
-    habitatType: 'pond',
+    title: 'Leap 5: Centering with Math.floor()',
+    description: 'Calculate the middle lilypad index using `Math.floor(totalPads / 2)` (5 / 2 = 2.5 -> 2).',
+    instructions: 'Call `turtle.jumpTo(lilypads[Math.floor(5 / 2)])`.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'frog', emoji: '🐸', name: 'Hoppy', color: '#22C55E', targetEmoji: '🟢', targetLabel: 'Lilypad' },
-      { id: 'a2', species: 'frog', emoji: '🐸', name: 'Leapy', color: '#22C55E', targetEmoji: '🟢', targetLabel: 'Lilypad' },
+      { id: 't1', species: 'turtle', emoji: '🐢', name: 'Shelly', targetIndex: 2, targetEmoji: '🏝️', targetLabel: 'Pad #2' },
     ],
-    targetStyles: {
-      alignItems: 'flex-end',
+    contextVars: { totalPads: 5 },
+    expectedSnippet: 'turtle.jumpTo(lilypads[Math.floor(5 / 2)])',
+    initialCode: 'turtle.jumpTo(lilypads[Math.',
+    suggestedTokens: ['floor(5 / 2)])', 'ceil(5 / 2)])', 'round(5 / 3)])', 'abs(5)])'],
+    curriculumModule: 'Tier 1 Module 3: Math.floor() & Rounding',
+    hint: '`Math.floor()` rounds a number downward to the nearest whole integer.',
+    mdnDoc: 'MDN: Math.floor()',
+    validate: (code: string) => {
+      const match = code.includes('floor');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [2] : [0],
+        message: match ? 'Math.floor(2.5) evaluates to 2! Shelly reached the center pad!' : 'Use Math.floor.',
+      };
     },
-    initialCode: 'alignItems: ',
-    suggestedTokens: ['flex-end', 'center', 'flex-start', 'stretch'],
-    curriculumModule: 'Cross Axis: alignItems',
-    hint: '`alignItems` controls alignment along the perpendicular cross axis (vertically in row layout).',
-    mdnDoc: 'MDN: align-items defines the default behavior for how flex items are laid out along the cross axis.',
   },
   {
     id: 6,
-    title: 'Level 6: Bunny in the Meadow Center',
-    description: 'Position the bunny 🐰 in the absolute dead-center of the meadow.',
-    instructions: 'Combine both `justifyContent: center` and `alignItems: center`.',
-    habitatType: 'forest',
+    title: 'Leap 6: Arrow Function Callback',
+    description: 'Define an arrow function `(step) => frog.hop(step * 2)` and invoke it with `2`.',
+    instructions: 'Call `((step) => frog.hop(step * 2))(2)` to advance 4 pads.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'bunny', emoji: '🐰', name: 'Cotton', color: '#EC4899', targetEmoji: '🥕', targetLabel: 'Carrot' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 4, targetEmoji: '🟢', targetLabel: 'Pad #4' },
     ],
-    targetStyles: {
-      justifyContent: 'center',
-      alignItems: 'center',
+    contextVars: {},
+    expectedSnippet: '((step) => frog.hop(step * 2))(2)',
+    initialCode: '((step) => frog.hop(',
+    suggestedTokens: ['step * 2))(2)', 'step + 1))(2)', 'step * 1))(4)', '2))(2)'],
+    curriculumModule: 'Tier 2 Module 6: ES6 Arrow Functions',
+    hint: 'Arrow functions provide concise syntax: `(param) => expression`.',
+    mdnDoc: 'MDN: Arrow function expressions',
+    validate: (code: string) => {
+      const match = code.includes('step * 2') || code.includes('step*2');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [4] : [0],
+        message: match ? 'Arrow function executed: 2 * 2 = 4!' : 'Use step * 2 to calculate distance.',
+      };
     },
-    initialCode: 'justifyContent: center;\nalignItems: ',
-    suggestedTokens: ['center', 'flex-end', 'flex-start', 'space-around'],
-    curriculumModule: 'Centering in Modern CSS & React Native',
-    hint: 'The holy grail of CSS alignment: `justifyContent: center` + `alignItems: center` creates perfect 2D centering.',
-    mdnDoc: 'MDN: Centering in CSS requires aligning both main and cross axes.',
   },
   {
     id: 7,
-    title: 'Level 7: Monkeys & Bananas',
-    description: 'Spread the monkeys 🐵🐵 along the bottom of the palm canopy.',
-    instructions: 'Use `justifyContent: space-around` and `alignItems: flex-end`.',
-    habitatType: 'savannah',
+    title: 'Leap 7: Dynamic Last Index Access',
+    description: 'In JavaScript arrays, access the last item with `array[array.length - 1]`.',
+    instructions: 'Pass `lilypads[lilypads.length - 1]` to send Duckling to the last pad.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'monkey', emoji: '🐵', name: 'Coco', color: '#F59E0B', targetEmoji: '🍌', targetLabel: 'Banana Tree' },
-      { id: 'a2', species: 'monkey', emoji: '🐵', name: 'Kiki', color: '#F59E0B', targetEmoji: '🍌', targetLabel: 'Banana Tree' },
+      { id: 'd1', species: 'duck', emoji: '🦆', name: 'Duckling', targetIndex: 4, targetEmoji: '🟡', targetLabel: 'Pad #4' },
     ],
-    targetStyles: {
-      justifyContent: 'space-around',
-      alignItems: 'flex-end',
+    contextVars: { length: 5 },
+    expectedSnippet: 'duck.jumpTo(lilypads[lilypads.length - 1])',
+    initialCode: 'duck.jumpTo(lilypads[lilypads.length - ',
+    suggestedTokens: ['1])', '2])', '0])', '3])'],
+    curriculumModule: 'Tier 2 Module 7: Array.prototype.length',
+    hint: 'Since arrays are 0-indexed, the last element is always at `length - 1`.',
+    mdnDoc: 'MDN: Accessing the last element of an array',
+    validate: (code: string) => {
+      const match = code.includes('1');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [4] : [0],
+        message: match ? 'Duckling landed on the final pad using length - 1!' : 'Subtract 1 from length.',
+      };
     },
-    initialCode: 'justifyContent: space-around;\nalignItems: ',
-    suggestedTokens: ['flex-end', 'center', 'flex-start', 'stretch'],
-    curriculumModule: 'Combining 2D Flexbox Properties',
-    hint: 'Use `alignItems: flex-end` to sink the items to the bottom, while `space-around` spreads them horizontally.',
-    mdnDoc: 'MDN: Combining main and cross axis properties.',
   },
   {
     id: 8,
-    title: 'Level 8: Reverse the Animal Lineup',
-    description: 'Fox 🦊 and Puppy 🐶 need to switch their order to reach their burrows.',
-    instructions: 'Use `flexDirection: row-reverse` to flip the main axis horizontally.',
-    habitatType: 'forest',
+    title: 'Leap 8: Multi-Animal forEach Iteration',
+    description: 'Iterate over an array of frogs using `frogs.forEach(f => f.hop(2))` so both leap to pad #2!',
+    instructions: 'Apply `frogs.forEach(f => f.hop(2))` to leap all frogs at once.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'fox', emoji: '🦊', name: 'Rusty', color: '#EA580C', targetEmoji: '🌲', targetLabel: 'Burrow' },
-      { id: 'a2', species: 'dog', emoji: '🐶', name: 'Barnaby', color: '#D97706', targetEmoji: '🦴', targetLabel: 'Doghouse' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy A', targetIndex: 2, targetEmoji: '🟢', targetLabel: 'Pad #2' },
+      { id: 'f2', species: 'frog', emoji: '🐸', name: 'Froggy B', targetIndex: 2, targetEmoji: '🟢', targetLabel: 'Pad #2' },
     ],
-    targetStyles: {
-      flexDirection: 'row-reverse',
+    contextVars: { count: 2 },
+    expectedSnippet: 'frogs.forEach(f => f.hop(2))',
+    initialCode: 'frogs.forEach(f => f.',
+    suggestedTokens: ['hop(2))', 'hop(3))', 'jumpTo(1))', 'hop(4))'],
+    curriculumModule: 'Tier 3 Module 11: Array.prototype.forEach()',
+    hint: '`forEach()` executes a provided function once for each array element.',
+    mdnDoc: 'MDN: Array.prototype.forEach()',
+    validate: (code: string) => {
+      const match = code.includes('hop(2)');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [2, 2] : [0, 0],
+        message: match ? 'Both frogs executed f.hop(2) and landed together!' : 'Use f.hop(2).',
+      };
     },
-    initialCode: 'flexDirection: ',
-    suggestedTokens: ['row-reverse', 'row', 'column', 'column-reverse'],
-    curriculumModule: 'Flex Direction & Axis Reversal',
-    hint: '`row-reverse` starts items from the right edge and reverses their DOM order.',
-    mdnDoc: 'MDN: flex-direction sets how flex items are placed in the flex container.',
   },
   {
     id: 9,
-    title: 'Level 9: Vertical Tree Climbing',
-    description: 'Stack the animals vertically from top to bottom on the tree trunks.',
-    instructions: 'Use `flexDirection: column` to make the main axis vertical.',
-    habitatType: 'forest',
+    title: 'Leap 9: Array.prototype.find()',
+    description: 'Find the target lilypad matching `{ color: "gold" }` using `lilypads.find(p => p.color === "gold")`.',
+    instructions: 'Find the pad with `p.color === "gold"`.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'cat', emoji: '🐱', name: 'Tiger', color: '#F97316', targetEmoji: '🌳', targetLabel: 'Branch Top' },
-      { id: 'a2', species: 'monkey', emoji: '🐵', name: 'George', color: '#F59E0B', targetEmoji: '🌳', targetLabel: 'Branch Middle' },
-      { id: 'a3', species: 'frog', emoji: '🐸', name: 'Toad', color: '#22C55E', targetEmoji: '🌳', targetLabel: 'Branch Base' },
+      { id: 't1', species: 'turtle', emoji: '🐢', name: 'Shelly', targetIndex: 3, targetEmoji: '⭐', targetLabel: 'Pad #3' },
     ],
-    targetStyles: {
-      flexDirection: 'column',
+    contextVars: { pads: ['green', 'green', 'green', 'gold', 'green'] },
+    expectedSnippet: 'lilypads.find(p => p.color === "gold")',
+    initialCode: 'lilypads.find(p => p.color === ',
+    suggestedTokens: ['"gold")', '"green")', '"blue")', 'null)'],
+    curriculumModule: 'Tier 3 Module 11: Array.prototype.find()',
+    hint: '`find()` returns the first element that satisfies the provided testing function.',
+    mdnDoc: 'MDN: Array.prototype.find()',
+    validate: (code: string) => {
+      const match = code.includes('gold');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [3] : [0],
+        message: match ? 'Shelly found the gold pad and navigated directly to it!' : 'Search for "gold".',
+      };
     },
-    initialCode: 'flexDirection: ',
-    suggestedTokens: ['column', 'row', 'column-reverse', 'row-reverse'],
-    curriculumModule: 'Column Layout & The Vertical Main Axis',
-    hint: 'In `flexDirection: column`, the main axis becomes vertical, and the cross axis becomes horizontal!',
-    mdnDoc: 'MDN: flex-direction: column stacks items vertically.',
   },
   {
     id: 10,
-    title: 'Level 10: Arctic Inversion',
-    description: 'Stack the penguins 🐧🐧 from the bottom up in reverse order.',
-    instructions: 'Use `flexDirection: column-reverse` to invert the vertical stack.',
-    habitatType: 'arctic',
+    title: 'Leap 10: Array Destructuring with Rest',
+    description: 'Unpack the target pads array using rest syntax: `const [first, ...rest] = pads`. Jump to `rest[2]`.',
+    instructions: 'Select `rest[2]` to jump to pad index 3.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'penguin', emoji: '🐧', name: 'Chilly', color: '#0284C7', targetEmoji: '❄️', targetLabel: 'Low Ice' },
-      { id: 'a2', species: 'penguin', emoji: '🐧', name: 'Frosty', color: '#0284C7', targetEmoji: '❄️', targetLabel: 'High Ice' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 3, targetEmoji: '🟢', targetLabel: 'Pad #3' },
     ],
-    targetStyles: {
-      flexDirection: 'column-reverse',
+    contextVars: {},
+    expectedSnippet: 'frog.jumpTo(rest[2])',
+    initialCode: 'frog.jumpTo(rest[',
+    suggestedTokens: ['2])', '1])', '0])', '3])'],
+    curriculumModule: 'Tier 2 Module 9: Array Destructuring & Rest Parameter',
+    hint: 'The rest element `...rest` contains all elements after `first`. Index 2 in rest is index 3 in the original array.',
+    mdnDoc: 'MDN: Destructuring assignment - Rest property',
+    validate: (code: string) => {
+      const match = code.includes('2');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [3] : [0],
+        message: match ? 'Rest element rest[2] correctly resolved to pad 3!' : 'Select rest[2].',
+      };
     },
-    initialCode: 'flexDirection: ',
-    suggestedTokens: ['column-reverse', 'column', 'row-reverse', 'flex-end'],
-    curriculumModule: 'Inverted Column Axes',
-    hint: '`column-reverse` lays out items from bottom to top!',
-    mdnDoc: 'MDN: flex-direction: column-reverse starts from bottom-left.',
   },
   {
     id: 11,
-    title: 'Level 11: Savannah Spacing Gap',
-    description: 'Give the lion 🦁 and tiger 🐯 their own personal territory using modern gap.',
-    instructions: 'Center the animals with `justifyContent: center` and separate them with `gap: 24`.',
-    habitatType: 'savannah',
+    title: 'Leap 11: Logical Nullish Coalescing (??)',
+    description: 'Use the modern `??` operator: `frog.hop(frog.customStep ?? 3)`. Since customStep is null, fallback is 3!',
+    instructions: 'Provide fallback value with `?? 3`.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'lion', emoji: '🦁', name: 'Simba', color: '#EAB308', targetEmoji: '👑', targetLabel: 'Pride Rock' },
-      { id: 'a2', species: 'tiger', emoji: '🐯', name: 'Rajah', color: '#F97316', targetEmoji: '🌿', targetLabel: 'Grassland' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Froggy', targetIndex: 3, targetEmoji: '🟢', targetLabel: 'Pad #3' },
     ],
-    targetStyles: {
-      justifyContent: 'center',
-      gap: 24,
+    contextVars: { customStep: null },
+    expectedSnippet: 'frog.hop(frog.customStep ?? 3)',
+    initialCode: 'frog.hop(frog.customStep ?? ',
+    suggestedTokens: ['3)', '2)', '0)', '1)'],
+    curriculumModule: 'Tier 4 Module 20: Nullish Coalescing Operator (??)',
+    hint: 'The `??` operator returns its right-hand operand when its left-hand operand is null or undefined.',
+    mdnDoc: 'MDN: Nullish coalescing operator',
+    validate: (code: string) => {
+      const match = code.includes('3');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [3] : [0],
+        message: match ? 'Nullish coalescing returned 3! Pad #3 reached!' : 'Use ?? 3 for fallback.',
+      };
     },
-    initialCode: 'justifyContent: center;\ngap: ',
-    suggestedTokens: ['24', '12', '32', '16'],
-    curriculumModule: 'Modern CSS & React Native Gap Property',
-    hint: '`gap` sets the distance between flex items without needing margin hacks on individual children!',
-    mdnDoc: 'MDN: gap CSS property defines gutter between rows and columns.',
   },
   {
     id: 12,
-    title: 'Level 12: Grand Safari Alignment',
-    description: 'The master challenge! Align the animals in a column, spaced between, and centered horizontally.',
-    instructions: 'Set `flexDirection: column`, `justifyContent: space-between`, and `alignItems: center`.',
-    habitatType: 'savannah',
+    title: 'Leap 12: Higher-Order Chaining Mastery',
+    description: 'Filter awake frogs and map them to their target lilypads: `frogs.filter(f => f.awake).forEach(f => f.hop(4))`.',
+    instructions: 'Chain `.filter(f => f.awake).forEach(f => f.hop(4))`.',
+    totalPads: 5,
     animals: [
-      { id: 'a1', species: 'frog', emoji: '🐸', name: 'Goliath', color: '#22C55E', targetEmoji: '🟢', targetLabel: 'North Lily' },
-      { id: 'a2', species: 'fox', emoji: '🦊', name: 'Amber', color: '#EA580C', targetEmoji: '🌲', targetLabel: 'Center Grove' },
-      { id: 'a3', species: 'duck', emoji: '🦆', name: 'Donald', color: '#EAB308', targetEmoji: '🟡', targetLabel: 'South Pond' },
+      { id: 'f1', species: 'frog', emoji: '🐸', name: 'Goliath', targetIndex: 4, targetEmoji: '🟢', targetLabel: 'Pad #4' },
     ],
-    targetStyles: {
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    contextVars: { awake: true },
+    expectedSnippet: 'frogs.filter(f => f.awake).forEach(f => f.hop(4))',
+    initialCode: 'frogs.filter(f => f.awake).forEach(f => f.',
+    suggestedTokens: ['hop(4))', 'hop(2))', 'sleep())', 'hop(1))'],
+    curriculumModule: 'Tier 3 Module 11: Method Chaining in JavaScript',
+    hint: 'Chaining array methods allows clean, readable data transformations.',
+    mdnDoc: 'MDN: Method chaining in JavaScript',
+    validate: (code: string) => {
+      const match = code.includes('hop(4)');
+      return {
+        isSuccess: match,
+        targetPositions: match ? [4] : [0],
+        message: match ? 'Mastery! The filtered frog hopped 4 pads onto the golden lilypad! 🏆' : 'Use f.hop(4).',
+      };
     },
-    initialCode: 'flexDirection: column;\njustifyContent: space-between;\nalignItems: ',
-    suggestedTokens: ['center', 'flex-start', 'flex-end', 'stretch'],
-    curriculumModule: 'Full Multi-Axis Mastery',
-    hint: 'Combine column direction with space-between main-axis and center cross-axis!',
-    mdnDoc: 'MDN: Complete flexbox alignment overview.',
   },
 ];
 
@@ -385,8 +458,8 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
   {
     id: 1,
     title: 'Mission 1: Rescue the Hungry Critters',
-    description: 'Filter the sanctuary to find animals that are hungry and need feeding immediately.',
-    instructions: 'Complete the filter predicate to return animals with `hungry === true`.',
+    description: 'Filter the sanctuary array to find animals where hungry is true.',
+    instructions: 'Complete the filter predicate: `animals.filter(a => a.hungry)`.',
     initialAnimals: [
       { id: 'p1', species: 'panda', emoji: '🐼', name: 'Bao', age: 4, health: 90, habitat: 'jungle', hungry: true, speed: 20 },
       { id: 'l1', species: 'lion', emoji: '🦁', name: 'Leo', age: 7, health: 85, habitat: 'savannah', hungry: false, speed: 60 },
@@ -408,7 +481,7 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
       return {
         isSuccess: isMatch,
         resultingAnimals: resulting,
-        message: isMatch ? 'Panda Bao 🐼 and Koala Kip 🐨 rescued for lunchtime!' : 'Check your condition: we need hungry animals!',
+        message: isMatch ? 'Panda Bao 🐼 and Koala Kip 🐨 rescued for lunchtime!' : 'Check condition: we need hungry animals!',
       };
     },
     curriculumModule: 'Tier 3 Module 11: Array.prototype.filter()',
@@ -448,8 +521,8 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
   },
   {
     id: 3,
-    title: 'Mission 3: Fast Explorers First',
-    description: 'Take the first 2 animals from the front of the expedition lineup with slice.',
+    title: 'Mission 3: Fast Explorers First with .slice()',
+    description: 'Take the first 2 animals from the front of the lineup using slice.',
     instructions: 'Use `animals.slice(0, 2)` to extract the scouting pair.',
     initialAnimals: [
       { id: 't1', species: 'tiger', emoji: '🐯', name: 'Shere', age: 5, health: 88, habitat: 'jungle', hungry: false, speed: 55 },
@@ -480,8 +553,8 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
   },
   {
     id: 4,
-    title: 'Mission 4: Energy Booster Drink',
-    description: 'Give all rescued animals a vitamin boost by increasing their health to 100 with map.',
+    title: 'Mission 4: Energy Booster with .map()',
+    description: 'Give all rescued animals a boost by mapping their health to 100.',
     instructions: 'Use `animals.map(a => ({ ...a, health: 100 }))`.',
     initialAnimals: [
       { id: 'p1', species: 'panda', emoji: '🐼', name: 'Bao', age: 4, health: 70, habitat: 'jungle', hungry: false, speed: 20 },
@@ -510,8 +583,8 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
   },
   {
     id: 5,
-    title: 'Mission 5: Speed Rank Tournament',
-    description: 'Sort the animals from fastest to slowest speed using sort((a, b) => b.speed - a.speed).',
+    title: 'Mission 5: Speed Rank Tournament with .sort()',
+    description: 'Sort animals from fastest to slowest speed using sort((a, b) => b.speed - a.speed).',
     instructions: 'Sort by speed in descending order: `(a, b) => b.speed - a.speed`.',
     initialAnimals: [
       { id: 'p1', species: 'panda', emoji: '🐼', name: 'Bao', age: 4, health: 100, habitat: 'jungle', hungry: false, speed: 25 },
@@ -543,7 +616,113 @@ export const ARRAY_RESCUE_LEVELS: ArrayRescueLevel[] = [
 ];
 
 // --------------------------------------------------------------------------------
-// 3. CONDITIONAL QUEST LEVELS (Conditionals, Boolean Logic & Operators)
+// 3. OBJECT SAFARI LEVELS (Objects, Destructuring, Spread, Methods, this)
+// --------------------------------------------------------------------------------
+export const OBJECT_SAFARI_LEVELS: ObjectSafariLevel[] = [
+  {
+    id: 1,
+    title: 'Passport 1: Object Destructuring',
+    description: 'Extract `name` and `species` from the animal passport object.',
+    instructions: 'Use destructuring syntax: `const { name, species } = animal;`.',
+    animalObj: { name: 'Simba', species: 'Lion', habitat: 'Savannah', age: 5 },
+    expectedSnippet: 'const { name, species } = animal;',
+    initialCode: 'const { ',
+    suggestedTokens: ['name, species } = animal;', 'name } = animal;', 'species, age } = animal;', 'habitat } = animal;'],
+    curriculumModule: 'Tier 2 Module 9 & Tier 3 Module 12: Object Destructuring',
+    hint: '`const { prop1, prop2 } = object;` unpacks properties into matching variables.',
+    validate: (code: string) => {
+      const match = code.includes('name') && code.includes('species');
+      return {
+        isSuccess: match,
+        outputText: 'name: "Simba", species: "Lion"',
+        message: match ? 'Properties unpacked cleanly! Passport verified! 🦁' : 'Extract both name and species.',
+      };
+    },
+  },
+  {
+    id: 2,
+    title: 'Passport 2: Object Spread & Immutability',
+    description: 'Clone the critter profile and add `vaccinated: true` without mutating the original object.',
+    instructions: 'Use the spread operator: `{ ...animal, vaccinated: true }`.',
+    animalObj: { name: 'Bao', species: 'Panda', vaccinated: false },
+    expectedSnippet: '{ ...animal, vaccinated: true }',
+    initialCode: 'const updated = { ...animal, ',
+    suggestedTokens: ['vaccinated: true }', 'vaccinated: false }', 'health: 100 }', 'age: 4 }'],
+    curriculumModule: 'Tier 2 Module 9 & Tier 3 Module 12: Object Spread Syntax ({ ...obj })',
+    hint: '`{ ...obj, key: newVal }` creates a shallow copy with overridden or added properties.',
+    validate: (code: string) => {
+      const match = code.includes('vaccinated: true') || code.includes('vaccinated:true');
+      return {
+        isSuccess: match,
+        outputText: '{ name: "Bao", species: "Panda", vaccinated: true }',
+        message: match ? 'Panda Bao is vaccinated and safe! 🐼💉' : 'Set vaccinated: true.',
+      };
+    },
+  },
+  {
+    id: 3,
+    title: 'Passport 3: Object.keys() Inspection',
+    description: 'Inspect all attribute names of the animal registry with `Object.keys(animal)`.',
+    instructions: 'Call `Object.keys(animal)` to retrieve an array of property names.',
+    animalObj: { name: 'Kip', diet: 'Eucalyptus', sleepHours: 18 },
+    expectedSnippet: 'Object.keys(animal)',
+    initialCode: 'Object.',
+    suggestedTokens: ['keys(animal)', 'values(animal)', 'entries(animal)', 'assign(animal)'],
+    curriculumModule: 'Tier 3 Module 12: Object.keys, values & entries',
+    hint: '`Object.keys(obj)` returns an array of a given object\'s own enumerable property names.',
+    validate: (code: string) => {
+      const match = code.includes('keys(animal)');
+      return {
+        isSuccess: match,
+        outputText: '["name", "diet", "sleepHours"]',
+        message: match ? 'Registry keys inspected successfully! 🐨' : 'Use Object.keys(animal).',
+      };
+    },
+  },
+  {
+    id: 4,
+    title: 'Passport 4: Invoking Object Methods',
+    description: 'Trigger the animal sound method: `falcon.screech()`.',
+    instructions: 'Call `falcon.screech()` to make the mascot take flight.',
+    animalObj: { name: 'Apollo', species: 'Falcon', sound: 'Screeech!' },
+    expectedSnippet: 'falcon.screech()',
+    initialCode: 'falcon.',
+    suggestedTokens: ['screech()', 'fly()', 'rest()', 'sound'],
+    curriculumModule: 'Tier 2 Module 8 & Tier 3 Module 13: Object Methods',
+    hint: 'Functions stored on object properties are methods, invoked with `object.methodName()`.',
+    validate: (code: string) => {
+      const match = code.includes('screech()');
+      return {
+        isSuccess: match,
+        outputText: '"Screeech!"',
+        message: match ? 'Apollo the Falcon took flight across the sky! 🦅' : 'Invoke falcon.screech().',
+      };
+    },
+  },
+  {
+    id: 5,
+    title: 'Passport 5: Context Binding with .call()',
+    description: 'Explicitly bind `this` to lion: `animal.roar.call(lion, "Loud")`.',
+    instructions: 'Use `.call(lion, "Loud")` to invoke the roar with the lion\'s name.',
+    animalObj: { name: 'Simba' },
+    expectedSnippet: 'animal.roar.call(lion, "Loud")',
+    initialCode: 'animal.roar.',
+    suggestedTokens: ['call(lion, "Loud")', 'apply(lion)', 'bind(lion)', 'call(null)'],
+    curriculumModule: 'Tier 3 Module 13: Function.prototype.call() & this Context',
+    hint: '`.call()` calls a function with a given `this` value and arguments provided individually.',
+    validate: (code: string) => {
+      const match = code.includes('call(lion');
+      return {
+        isSuccess: match,
+        outputText: '"Simba roars Loud!"',
+        message: match ? 'Simba\'s mighty roar echoes across the savannah! 🦁👑' : 'Use .call(lion, "Loud").',
+      };
+    },
+  },
+];
+
+// --------------------------------------------------------------------------------
+// 4. CONDITIONAL QUEST LEVELS (Conditionals, Boolean Logic & Operators)
 // --------------------------------------------------------------------------------
 export const CONDITIONAL_QUEST_LEVELS: ConditionalLevel[] = [
   {
@@ -614,7 +793,7 @@ export const CONDITIONAL_QUEST_LEVELS: ConditionalLevel[] = [
 ];
 
 // --------------------------------------------------------------------------------
-// 4. LOOP HIVE LEVELS (Loops & Iteration: for, while, repeat)
+// 5. LOOP HIVE LEVELS (Loops & Iteration: for, while, repeat)
 // --------------------------------------------------------------------------------
 export const LOOP_HIVE_LEVELS: LoopLevel[] = [
   {
@@ -680,7 +859,7 @@ export const LOOP_HIVE_LEVELS: LoopLevel[] = [
 ];
 
 // --------------------------------------------------------------------------------
-// 5. ASYNC DERBY RACE LEVELS (Event Loop, Promises & Microtasks)
+// 6. ASYNC DERBY RACE LEVELS (Event Loop, Promises & Microtasks)
 // --------------------------------------------------------------------------------
 export const ASYNC_DERBY_LEVELS: AsyncLevel[] = [
   {
@@ -799,62 +978,81 @@ Promise.resolve()
 ];
 
 // --------------------------------------------------------------------------------
-// MASTER LIST OF ALL ANIMAL CODING GAMES
+// MASTER LIST OF 100% PURE JAVASCRIPT CODING GAMES (LESSONS 0 TO 100)
 // --------------------------------------------------------------------------------
 export const ANIMAL_GAMES_COLLECTION: AnimalGame[] = [
   {
-    id: 'game_flexbox_safari',
-    gameType: 'flexbox',
-    title: 'Flexbox Safari',
-    subtitle: 'Frog CSS Replica · Visual Layout Game',
-    description: 'Guide frogs 🐸, cats 🐱, monkeys 🐵, penguins 🐧 and foxes 🦊 to their matching pads with live CSS Flexbox code!',
+    id: 'game_froggy_js',
+    gameType: 'froggy_js',
+    title: 'Froggy JS: Function Jump',
+    subtitle: 'Methods & Coordinates · Visual JS Puzzles',
+    description: 'Guide frogs 🐸, ducks 🦆, and turtles 🐢 across the pond using pure JavaScript function calls, array indexing, Math, and expressions!',
     icon: '🐸',
-    mascots: ['🐸', '🐱', '🐵', '🐧', '🦊', '🦆', '🐰', '🦁'],
-    category: 'CSS & Layout',
-    curriculumModulesTag: 'Supports: Layout & Flexbox (Web & React Native)',
+    mascots: ['🐸', '🦆', '🐢'],
+    category: 'Functions & Math',
+    curriculumModulesTag: 'Tier 1 (Lessons 1–25): Syntax, Functions & Arrays',
     isPro: false,
-    totalLevels: FLEXBOX_SAFARI_LEVELS.length,
+    totalLevels: FROGGY_JS_LEVELS.length,
     xpReward: 150,
-    highScore: 1200,
-    completedTimes: 5,
+    highScore: 1250,
+    completedTimes: 6,
     accentColor: '#22C55E',
     badgeLabel: 'POPULAR ⭐',
-    flexboxLevels: FLEXBOX_SAFARI_LEVELS,
+    froggyLevels: FROGGY_JS_LEVELS,
   },
   {
     id: 'game_array_rescue',
     gameType: 'array_rescue',
-    title: 'Array Zoo Rescue',
-    subtitle: 'Data & Iteration · Sanctuary Dispatcher',
-    description: 'Rescue pandas 🐼, lions 🦁, and koalas 🐨 using .filter(), .map(), .slice() and .sort() to sort them into sanctuaries!',
+    title: 'Array Zoo Sanctuary',
+    subtitle: 'Transformations · Data Dispatcher',
+    description: 'Rescue pandas 🐼, lions 🦁, and koalas 🐨 using pure JavaScript array methods: .filter(), .map(), .slice() and .sort()!',
     icon: '🐾',
     mascots: ['🐼', '🦁', '🐨', '🐘', '🐯', '🦒'],
     category: 'Arrays & Data',
-    curriculumModulesTag: 'Supports: Tier 2 Mod 7 & Tier 3 Mod 11 (Arrays & Methods)',
+    curriculumModulesTag: 'Tier 2 (Mod 7) & Tier 3 (Mod 11): Array Methods',
     isPro: false,
     totalLevels: ARRAY_RESCUE_LEVELS.length,
     xpReward: 120,
-    highScore: 950,
-    completedTimes: 2,
+    highScore: 980,
+    completedTimes: 3,
     accentColor: '#3B82F6',
     badgeLabel: 'HOT 🔥',
     arrayRescueLevels: ARRAY_RESCUE_LEVELS,
+  },
+  {
+    id: 'game_object_safari',
+    gameType: 'object_safari',
+    title: 'Object Safari: Critter Registry',
+    subtitle: 'Objects & Context · Passports & Methods',
+    description: 'Inspect animal passports, practice object destructuring { name }, spread cloning { ...critter }, and bind `this` with .call()!',
+    icon: '🦁',
+    mascots: ['🦁', '🐼', '🐨', '🦅'],
+    category: 'Objects & OOP',
+    curriculumModulesTag: 'Tier 2 (Mod 8) & Tier 3 (Mod 12-13): Objects & this',
+    isPro: false,
+    totalLevels: OBJECT_SAFARI_LEVELS.length,
+    xpReward: 130,
+    highScore: 890,
+    completedTimes: 1,
+    accentColor: '#A855F7',
+    badgeLabel: 'OBJECTS 💎',
+    objectSafariLevels: OBJECT_SAFARI_LEVELS,
   },
   {
     id: 'game_conditional_quest',
     gameType: 'conditional_quest',
     title: 'Conditional Quest',
     subtitle: 'Logic & Flow · Bunny Run',
-    description: 'Help Bunny 🐰 and Fox 🦊 navigate obstacle gates using if/else conditions, boolean logic (&&, ||) and ternaries!',
+    description: 'Help Bunny 🐰 and Fox 🦊 unlock gates using pure JavaScript boolean expressions (&&, ||, !), if/else, and ternaries!',
     icon: '🥕',
     mascots: ['🐰', '🦊', '🐻', '🦉', '🦘'],
-    category: 'Logic & Gates',
-    curriculumModulesTag: 'Supports: Tier 1 Mod 3 & 4 (Operators & Conditionals)',
+    category: 'Logic & Flow',
+    curriculumModulesTag: 'Tier 1 (Mod 3 & 4): Operators & Conditionals',
     isPro: false,
     totalLevels: CONDITIONAL_QUEST_LEVELS.length,
     xpReward: 100,
-    highScore: 800,
-    completedTimes: 3,
+    highScore: 820,
+    completedTimes: 4,
     accentColor: '#F59E0B',
     badgeLabel: 'FREE',
     conditionalLevels: CONDITIONAL_QUEST_LEVELS,
@@ -863,17 +1061,17 @@ export const ANIMAL_GAMES_COLLECTION: AnimalGame[] = [
     id: 'game_loop_hive',
     gameType: 'loop_hive',
     title: 'Loop Hive: Pollen Run',
-    subtitle: 'Iteration · Bee Swarm',
-    description: 'Guide worker bees 🐝 and ants 🐜 through flower meadows with for and while loops to fill the honeycomb with honey 🍯!',
+    subtitle: 'Loops & Iteration · Bee Swarm',
+    description: 'Guide worker bees 🐝 and ants 🐜 through meadow arrays with for and while loops to fill the honeycomb with honey 🍯!',
     icon: '🐝',
     mascots: ['🐝', '🐜', '🦋'],
-    category: 'Loops & Swarm',
-    curriculumModulesTag: 'Supports: Tier 1 Mod 5 (Loops & Iterations)',
+    category: 'Loops & Iteration',
+    curriculumModulesTag: 'Tier 1 (Mod 5): Loops, While & Iteration',
     isPro: false,
     totalLevels: LOOP_HIVE_LEVELS.length,
     xpReward: 110,
-    highScore: 890,
-    completedTimes: 1,
+    highScore: 910,
+    completedTimes: 2,
     accentColor: '#FACC15',
     badgeLabel: 'FUN 🍯',
     loopLevels: LOOP_HIVE_LEVELS,
@@ -881,13 +1079,13 @@ export const ANIMAL_GAMES_COLLECTION: AnimalGame[] = [
   {
     id: 'game_async_derby',
     gameType: 'async_race',
-    title: 'Async Derby: Critter Race',
-    subtitle: 'Event Loop & Promises · Grand Prix',
-    description: 'Cheetah 🐆, Hare 🐇, Falcon 🦅 and Turtle 🐢 race on the track! Master microtasks, macrotasks and async execution order.',
+    title: 'Async Grand Prix',
+    subtitle: 'Event Loop & Promises · Speed Track',
+    description: 'Cheetah 🐆, Hare 🐇, Falcon 🦅, and Turtle 🐢 race! Master microtasks (Promise.then), macrotasks (setTimeout), and async/await.',
     icon: '⚡',
     mascots: ['🐆', '🐇', '🦅', '🐢'],
-    category: 'Async & Speed',
-    curriculumModulesTag: 'Supports: Tier 4 Mod 16 & 17 (Promises, Timers, Event Loop)',
+    category: 'Async & Modern JS',
+    curriculumModulesTag: 'Tier 4 (Mod 16 & 17): Promises, Timers, Event Loop',
     isPro: true,
     totalLevels: ASYNC_DERBY_LEVELS.length,
     xpReward: 160,
@@ -900,13 +1098,13 @@ export const ANIMAL_GAMES_COLLECTION: AnimalGame[] = [
   {
     id: 'game_variables_rush',
     gameType: 'quiz',
-    title: 'Variables & Scope Blitz',
+    title: 'JS Variables & Scope Blitz',
     subtitle: 'Fundamentals · Speed Challenge',
-    description: 'Test your reflex knowledge on var, let, const, hoisting, and primitive types against the clock!',
+    description: 'Test your knowledge on var vs let vs const, hoisting, primitives, and scope under time pressure!',
     icon: '⚡',
     mascots: ['🦊', '🦉'],
     category: 'Speed Quizzes',
-    curriculumModulesTag: 'Supports: Tier 1 Mod 2 (Variables, Types & Scope)',
+    curriculumModulesTag: 'Tier 1 (Mod 2): Variables, Types & Scope',
     isPro: false,
     totalLevels: 5,
     xpReward: 50,
@@ -918,15 +1116,15 @@ export const ANIMAL_GAMES_COLLECTION: AnimalGame[] = [
   {
     id: 'game_bug_hunter',
     gameType: 'quiz',
-    title: 'Bug Hunter Pro',
-    subtitle: 'Debugging & Traps · Inspection',
-    description: 'Spot subtle JavaScript runtime errors, floating point gotchas, and type coercion traps before time runs out!',
+    title: 'JS Trap Detector (Bug Hunter)',
+    subtitle: 'Traps & Debugging · Code Inspection',
+    description: 'Spot subtle JavaScript traps (0.1 + 0.2 === 0.3, typeof NaN, closure mutations, coercion) before the timer runs out!',
     icon: '🐛',
     mascots: ['🐛', '🕷️'],
     category: 'Speed Quizzes',
-    curriculumModulesTag: 'Supports: Tier 2 Mod 10 (Error Handling & Debugging)',
+    curriculumModulesTag: 'Tier 2 (Mod 10) & Tier 4: Traps & Debugging',
     isPro: false,
-    totalLevels: 5,
+    totalLevels: 3,
     xpReward: 60,
     highScore: 720,
     completedTimes: 2,

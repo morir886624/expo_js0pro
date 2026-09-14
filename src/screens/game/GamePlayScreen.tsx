@@ -16,9 +16,10 @@ import { Button } from '../../components/common/Button';
 import { BorderRadius, Spacing, Typography } from '../../constants/theme';
 import { Game } from '../../data/mockData';
 
-// Animal Interactive Game Boards
-import { FlexboxSafariBoard } from '../../components/game/FlexboxSafariBoard';
+// Animal Interactive Game Boards (100% Pure JavaScript)
+import { FroggyJSBoard } from '../../components/game/FroggyJSBoard';
 import { ArrayRescueBoard } from '../../components/game/ArrayRescueBoard';
+import { ObjectSafariBoard } from '../../components/game/ObjectSafariBoard';
 import { ConditionalQuestBoard } from '../../components/game/ConditionalQuestBoard';
 import { LoopHiveBoard } from '../../components/game/LoopHiveBoard';
 import { AsyncCritterRaceBoard } from '../../components/game/AsyncCritterRaceBoard';
@@ -58,10 +59,12 @@ export const GamePlayScreen: React.FC<GamePlayScreenProps> = ({
 
   // Determine total levels for active animal game
   const totalLevels =
-    game.gameType === 'flexbox'
-      ? game.flexboxLevels?.length || 12
+    game.gameType === 'froggy_js'
+      ? game.froggyLevels?.length || 12
       : game.gameType === 'array_rescue'
       ? game.arrayRescueLevels?.length || 5
+      : game.gameType === 'object_safari'
+      ? game.objectSafariLevels?.length || 5
       : game.gameType === 'conditional_quest'
       ? game.conditionalLevels?.length || 5
       : game.gameType === 'loop_hive'
@@ -155,12 +158,20 @@ export const GamePlayScreen: React.FC<GamePlayScreenProps> = ({
 
   // Concept Hint Content
   const getActiveHint = () => {
-    if (game.gameType === 'flexbox' && game.flexboxLevels) {
-      const lvl = game.flexboxLevels[currentLevelIndex];
+    if (game.gameType === 'froggy_js' && game.froggyLevels) {
+      const lvl = game.froggyLevels[currentLevelIndex];
       return {
-        module: lvl?.curriculumModule || 'CSS & Flexbox',
-        hint: lvl?.hint || 'Check property spelling and values.',
-        doc: lvl?.mdnDoc || 'MDN Web Docs: Flexbox Layout',
+        module: lvl?.curriculumModule || 'Tier 1: Functions & Array Indices',
+        hint: lvl?.hint || 'Check your JavaScript expression and arguments.',
+        doc: lvl?.mdnDoc || 'MDN Web Docs: Functions and Methods',
+      };
+    }
+    if (game.gameType === 'object_safari' && game.objectSafariLevels) {
+      const lvl = game.objectSafariLevels[currentLevelIndex];
+      return {
+        module: lvl?.curriculumModule || 'Tier 2 & 3: Objects, Destructuring & this',
+        hint: lvl?.hint || 'Review object property syntax and method invocation.',
+        doc: 'MDN: Working with objects',
       };
     }
     if (game.gameType === 'array_rescue' && game.arrayRescueLevels) {
@@ -286,10 +297,10 @@ export const GamePlayScreen: React.FC<GamePlayScreenProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Render Specialized Animal Game Boards */}
-        {game.gameType === 'flexbox' && game.flexboxLevels && (
-          <FlexboxSafariBoard
-            level={game.flexboxLevels[currentLevelIndex]}
+        {/* Render Specialized Animal Game Boards (100% Pure JavaScript) */}
+        {game.gameType === 'froggy_js' && game.froggyLevels && (
+          <FroggyJSBoard
+            level={game.froggyLevels[currentLevelIndex]}
             onSuccess={handleAnimalLevelSuccess}
             onShowHint={() => setShowHintModal(true)}
             levelIndex={currentLevelIndex}
@@ -300,6 +311,16 @@ export const GamePlayScreen: React.FC<GamePlayScreenProps> = ({
         {game.gameType === 'array_rescue' && game.arrayRescueLevels && (
           <ArrayRescueBoard
             level={game.arrayRescueLevels[currentLevelIndex]}
+            onSuccess={handleAnimalLevelSuccess}
+            onShowHint={() => setShowHintModal(true)}
+            levelIndex={currentLevelIndex}
+            totalLevels={totalLevels}
+          />
+        )}
+
+        {game.gameType === 'object_safari' && game.objectSafariLevels && (
+          <ObjectSafariBoard
+            level={game.objectSafariLevels[currentLevelIndex]}
             onSuccess={handleAnimalLevelSuccess}
             onShowHint={() => setShowHintModal(true)}
             levelIndex={currentLevelIndex}

@@ -234,6 +234,8 @@ export const RootNavigator: React.FC = () => {
           let mod = MODULES_DATA[0];
           if (selectedGame.gameType === 'array_rescue') {
             mod = MODULES_DATA[6] || MODULES_DATA[0];
+          } else if (selectedGame.gameType === 'object_safari') {
+            mod = MODULES_DATA[7] || MODULES_DATA[0];
           } else if (selectedGame.gameType === 'conditional_quest') {
             mod = MODULES_DATA[3] || MODULES_DATA[0];
           } else if (selectedGame.gameType === 'loop_hive') {
