@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
+import { signInWithGoogleOAuth } from '../services/googleAuth';
 
 export interface UserProfile {
   id: string;
@@ -28,6 +29,7 @@ interface AuthContextType {
   hasSeenOnboarding: boolean;
   loading: boolean;
   login: (email: string, pass: string) => Promise<AuthResult>;
+  loginWithGoogle: () => Promise<AuthResult>;
   register: (name: string, email: string, pass: string) => Promise<AuthResult>;
   verifyEmailOtp: (
     email: string,
@@ -219,6 +221,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (): Promise<AuthResult> => {
+    setLoading(true);
+    try {
+      const result = await signInWithGoogleOAuth();
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+        };
+      }
+      if (result.session) {
+        await syncSessionUser(result.session);
+      }
+      return { success: true };
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || 'Google sign-in failed.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const register = async (
     name: string,
     email: string,
@@ -239,9 +265,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        let msg = error.message;
+        if (msg.toLowerCase().includes('gateway timeout') || (error as any).status === 504) {
+          msg = 'Supabase email server timed out (504). Check your custom SMTP in Supabase or turn off "Confirm email" in Supabase Auth.';
+        }
         return {
           success: false,
-          error: error.message,
+          error: msg,
         };
       }
 
@@ -270,9 +300,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: cleanEmail,
       };
     } catch (e: any) {
+      let msg = e.message || 'An unexpected error occurred during registration.';
+      if (msg.toLowerCase().includes('gateway timeout') || e.status === 504) {
+        msg = 'Supabase email server timed out (504). Check your custom SMTP in Supabase or turn off "Confirm email" in Supabase Auth.';
+      }
       return {
         success: false,
-        error: e.message || 'An unexpected error occurred during registration.',
+        error: msg,
       };
     }
   };
@@ -330,14 +364,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        let msg = error.message;
+        if (msg.toLowerCase().includes('gateway timeout') || (error as any).status === 504) {
+          msg = 'Supabase email server timed out (504). Please check your custom SMTP in Supabase.';
+        }
+        return { success: false, error: msg };
       }
 
       return { success: true };
     } catch (e: any) {
+      let msg = e.message || 'Failed to resend code.';
+      if (msg.toLowerCase().includes('gateway timeout') || e.status === 504) {
+        msg = 'Supabase email server timed out (504). Please check your custom SMTP in Supabase.';
+      }
       return {
         success: false,
-        error: e.message || 'Failed to resend code.',
+        error: msg,
       };
     }
   };
@@ -446,6 +488,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasSeenOnboarding,
         loading,
         login,
+        loginWithGoogle,
         register,
         verifyEmailOtp,
         resendOtp,

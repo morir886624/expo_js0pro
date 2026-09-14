@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,15 +33,36 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   initialEmail = '',
 }) => {
   const { colors, isDark } = useTheme();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setUnverifiedEmail(null);
+    setGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success) {
+        if (result.error && result.error !== 'Google sign-in was cancelled') {
+          setError(result.error);
+        }
+        return;
+      }
+      onLoginSuccess?.();
+    } catch (e: any) {
+      setError(e.message || 'Google sign-in failed.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -222,21 +244,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <View style={styles.socialButtonsRow}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => {
-              setError('Google login requires OAuth setup in Supabase dashboard.');
-            }}
+            disabled={googleLoading || loading}
+            onPress={handleGoogleLogin}
             style={[
               styles.socialButton,
               {
                 backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
                 borderColor: isDark ? '#374151' : '#E2E8F0',
+                opacity: googleLoading ? 0.7 : 1,
               },
             ]}
           >
-            <Ionicons name="logo-google" size={20} color={colors.text} />
-            <Text style={[styles.socialButtonText, { color: colors.text }]}>
-              Google
-            </Text>
+            {googleLoading ? (
+              <ActivityIndicator size="small" color="#FACC15" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color={colors.text} />
+                <Text style={[styles.socialButtonText, { color: colors.text }]}>
+                  Google
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity

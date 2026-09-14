@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +27,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onRegisterSuccess,
 }) => {
   const { colors, isDark } = useTheme();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
@@ -34,7 +35,26 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [password, setPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleGoogleRegister = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success) {
+        if (result.error && result.error !== 'Google sign-in was cancelled') {
+          setError(result.error);
+        }
+        return;
+      }
+    } catch (e: any) {
+      setError(e.message || 'Google registration failed.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const validateEmail = (val: string) => {
     return /\S+@\S+\.\S+/.test(val);
@@ -183,6 +203,51 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             size="lg"
             style={styles.actionButton}
           />
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: isDark ? '#374151' : '#E2E8F0' },
+              ]}
+            />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>
+              OR CONTINUE WITH
+            </Text>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: isDark ? '#374151' : '#E2E8F0' },
+              ]}
+            />
+          </View>
+
+          {/* Google Button */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={googleLoading || loading}
+            onPress={handleGoogleRegister}
+            style={[
+              styles.socialButton,
+              {
+                backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+                borderColor: isDark ? '#374151' : '#E2E8F0',
+                opacity: googleLoading ? 0.7 : 1,
+              },
+            ]}
+          >
+            {googleLoading ? (
+              <ActivityIndicator size="small" color="#FACC15" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color={colors.text} />
+                <Text style={[styles.socialButtonText, { color: colors.text }]}>
+                  Continue with Google
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Footer Link to Login */}
@@ -276,5 +341,33 @@ const styles = StyleSheet.create({
   signInLink: {
     color: '#FACC15',
     fontWeight: '800',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 10,
+    fontWeight: '700',
+    marginHorizontal: Spacing.md,
+    letterSpacing: 1,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+  },
+  socialButtonText: {
+    fontWeight: '700',
+    fontSize: Typography.sizes.sm,
   },
 });
