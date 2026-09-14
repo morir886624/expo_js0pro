@@ -174,3 +174,37 @@ revoke execute on function public.handle_new_user() from public;
 revoke execute on function public.handle_new_user() from anon;
 revoke execute on function public.handle_new_user() from authenticated;
 
+-- ==============================================================================
+-- Google Play Compliance: Account Deletion RPC
+-- Allows an authenticated user to permanently delete their own account & data
+-- ==============================================================================
+
+-- Also permit direct delete on public.profiles if needed
+drop policy if exists "Users can delete their own profile." on public.profiles;
+create policy "Users can delete their own profile." on public.profiles
+  for delete using ((select auth.uid()) = id);
+
+create or replace function public.delete_user_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  requesting_user_id uuid;
+begin
+  requesting_user_id := auth.uid();
+  if requesting_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  -- Delete from auth.users (cascades to public.profiles and all user_* tables)
+  delete from auth.users where id = requesting_user_id;
+end;
+$$;
+
+-- Allow authenticated users to execute their own account deletion
+grant execute on function public.delete_user_account() to authenticated;
+revoke execute on function public.delete_user_account() from anon;
+revoke execute on function public.delete_user_account() from public;
+

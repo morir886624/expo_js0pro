@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,9 +31,29 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onOpenUpgradeModal,
 }) => {
   const { colors, isDark, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { xp, level, streakDays, soundEnabled, toggleSound } = useGameProgress();
   const insets = useSafeAreaInsets();
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account & All Data',
+      'Are you sure you want to permanently delete your account? All your XP, lessons completed, streaks, and badges will be permanently erased. This action is irreversible.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Permanently',
+          style: 'destructive',
+          onPress: async () => {
+            const res = await deleteAccount();
+            if (!res.success && res.error) {
+              Alert.alert('Account Deletion', res.error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View
@@ -193,7 +214,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </View>
           </View>
 
-          <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.settingRow}>
             <View style={styles.settingLeft}>
               <View
                 style={[
@@ -205,7 +226,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </View>
               <View>
                 <Text style={[styles.settingLabel, { color: colors.text }]}>
-                  JWT Session
+                   JWT Session
                 </Text>
                 <Text style={{ fontSize: 11, color: colors.textSecondary }}>
                   Encrypted in SecureStore
@@ -213,6 +234,33 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </View>
             </View>
           </View>
+
+          {/* Google Play Compliant Account Deletion Row */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={confirmDeleteAccount}
+            style={[styles.settingRow, { borderBottomWidth: 0 }]}
+          >
+            <View style={styles.settingLeft}>
+              <View
+                style={[
+                  styles.settingIcon,
+                  { backgroundColor: isDark ? '#451A1A' : '#FEE2E2' },
+                ]}
+              >
+                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+              </View>
+              <View>
+                <Text style={[styles.settingLabel, { color: '#EF4444' }]}>
+                  Delete Account & Data
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                  Permanently erase all progress & account
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#EF4444" />
+          </TouchableOpacity>
         </Card>
 
         {/* Settings List */}

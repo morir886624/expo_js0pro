@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, StatusBar, ActivityIndicator, BackHandler } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { BottomTabBar, TabName } from '../components/navigation/BottomTabBar';
@@ -72,6 +72,79 @@ export const RootNavigator: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+
+  // Android Hardware Back Button handling for Google Play standard UX
+  useEffect(() => {
+    const onBackPress = () => {
+      // 1. If link expired / error modal is showing, dismiss it
+      if (linkError) {
+        clearLinkError();
+        return true;
+      }
+
+      // 2. If Premium modal is open, close it
+      if (showPremiumModal) {
+        setShowPremiumModal(false);
+        return true;
+      }
+
+      // 3. If any secondary/content modal is open, close it
+      if (activeModal !== 'none') {
+        setActiveModal('none');
+        return true;
+      }
+
+      // 4. If in unauthenticated flow
+      if (!isAuthenticated) {
+        if (authScreen === 'register' || authScreen === 'forgot_password') {
+          setAuthScreen('login');
+          return true;
+        }
+        if (authScreen === 'otp') {
+          if (otpFlowType === 'recovery') {
+            setAuthScreen('forgot_password');
+          } else {
+            setAuthScreen('register');
+          }
+          return true;
+        }
+        if (authScreen === 'reset_password' || isPasswordRecovery) {
+          setIsPasswordRecovery(false);
+          setAuthScreen('login');
+          return true;
+        }
+        // At login screen, allow app to exit normally
+        return false;
+      }
+
+      // 5. If in authenticated tabs, navigating back from another tab returns to home tab
+      if (currentTab !== 'home') {
+        setCurrentTab('home');
+        return true;
+      }
+
+      // 6. When already at home root, allow default system exit
+      return false;
+    };
+
+    const backSubscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress
+    );
+
+    return () => backSubscription.remove();
+  }, [
+    linkError,
+    showPremiumModal,
+    activeModal,
+    isAuthenticated,
+    authScreen,
+    otpFlowType,
+    isPasswordRecovery,
+    currentTab,
+    clearLinkError,
+    setIsPasswordRecovery,
+  ]);
 
   // 1. Initial Loading Splash Screen (Restoring JWT session from SecureStore)
   if (loading) {

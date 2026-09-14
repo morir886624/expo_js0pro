@@ -7,10 +7,17 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "description": "Master JavaScript from scratch with interactive lessons, coding challenges, and arcade games.",
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.js0pro.app",
+      "versionCode": 1,
+      "permissions": [],
+      "allowBackup": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.js0pro.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

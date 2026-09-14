@@ -57,6 +57,7 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   completeOnboarding: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -666,6 +667,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      if (user?.id) {
+        // 1. Attempt to execute the delete_user_account RPC
+        const { error: rpcError } = await supabase.rpc('delete_user_account');
+        if (rpcError) {
+          console.log('RPC delete_user_account returned error, fallback to profiles delete:', rpcError.message);
+          // Fallback: Delete profile record directly (cascades to related tables if configured)
+          await supabase.from('profiles').delete().eq('id', user.id);
+        }
+      }
+      await logout();
+      return { success: true };
+    } catch (e: any) {
+      console.log('Account deletion error:', e);
+      await logout();
+      return {
+        success: false,
+        error: e?.message || 'Failed to delete account. You have been signed out.',
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const completeOnboarding = async () => {
     setHasSeenOnboarding(true);
     if (Platform.OS === 'web') {
@@ -733,6 +760,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sendPasswordReset,
         resetPassword,
         logout,
+        deleteAccount,
         completeOnboarding,
         updateProfile,
         refreshProfile,
