@@ -221,7 +221,7 @@ export const GamePlayScreen: React.FC<GamePlayScreenProps> = ({
 
         {/* Option Cards */}
         <View style={styles.optionsList}>
-          {currentQ?.options.map((opt, i) => {
+          {currentQ?.options.map((opt: string, i: number) => {
             const isSelected = selectedOption === i;
             let optBorder = isDark ? '#374151' : '#E2E8F0';
             let optBg = isDark ? '#1F2937' : '#FFFFFF';

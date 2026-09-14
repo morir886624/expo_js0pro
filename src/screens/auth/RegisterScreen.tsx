@@ -18,7 +18,7 @@ import { BorderRadius, Spacing, Typography } from '../../constants/theme';
 
 interface RegisterScreenProps {
   onNavigateToLogin: () => void;
-  onRegisterSuccess: () => void;
+  onRegisterSuccess: (email: string, requiresVerification: boolean) => void;
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({
@@ -36,22 +36,41 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const validateEmail = (val: string) => {
+    return /\S+@\S+\.\S+/.test(val);
+  };
+
   const handleRegister = async () => {
-    if (!name || !email || !password) {
-      setError('Please fill in all fields');
+    if (!name.trim()) {
+      setError('Please enter your full name');
+      return;
+    }
+    if (!email.trim() || !validateEmail(email.trim())) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
     if (!agreeTerms) {
-      setError('Please accept terms of service');
+      setError('Please accept the Terms of Service & Privacy Policy');
       return;
     }
+
     setError('');
     setLoading(true);
+
     try {
-      await register(name, email, password);
-      onRegisterSuccess();
-    } catch (e) {
-      setError('Registration failed. Try again.');
+      const result = await register(name, email, password);
+      if (!result.success) {
+        setError(result.error || 'Registration failed. Please try again.');
+        return;
+      }
+
+      onRegisterSuccess(email.trim(), !!result.requiresVerification);
+    } catch (e: any) {
+      setError(e.message || 'Registration failed. Try again.');
     } finally {
       setLoading(false);
     }
@@ -90,9 +109,12 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
         <View style={styles.formContainer}>
           <Input
             label="Full Name"
-            placeholder="Abdul Moeid"
+            placeholder="e.g. Alex Morgan"
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => {
+              setName(text);
+              if (error) setError('');
+            }}
             leftIcon="person-outline"
           />
 
@@ -100,7 +122,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             label="Email"
             placeholder="your@email.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (error) setError('');
+            }}
             autoCapitalize="none"
             keyboardType="email-address"
             leftIcon="mail-outline"
@@ -108,14 +133,32 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
           <Input
             label="Password"
-            placeholder="••••••••"
+            placeholder="At least 6 characters"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (error) setError('');
+            }}
             isPassword
             leftIcon="lock-closed-outline"
           />
 
-          {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
+          {error ? (
+            <View
+              style={[
+                styles.errorCard,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(239, 68, 68, 0.15)'
+                    : '#FEF2F2',
+                  borderColor: isDark ? '#7F1D1D' : '#FCA5A5',
+                },
+              ]}
+            >
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
 
           {/* Terms checkbox */}
           <TouchableOpacity
@@ -192,11 +235,21 @@ const styles = StyleSheet.create({
   formContainer: {
     marginBottom: Spacing.base,
   },
-  errorBanner: {
+  errorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  errorText: {
     color: '#EF4444',
     fontSize: Typography.sizes.xs,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
+    flex: 1,
+    lineHeight: 18,
     fontWeight: '600',
   },
   termsRow: {
@@ -225,4 +278,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

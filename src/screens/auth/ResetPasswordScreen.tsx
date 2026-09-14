@@ -15,28 +15,31 @@ import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { BorderRadius, Spacing, Typography } from '../../constants/theme';
 
-interface ForgotPasswordScreenProps {
+interface ResetPasswordScreenProps {
   onBack: () => void;
-  onSubmitSuccess: (email: string) => void;
+  onSuccess: () => void;
 }
 
-export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
+export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   onBack,
-  onSubmitSuccess,
+  onSuccess,
 }) => {
   const { colors, isDark } = useTheme();
-  const { sendPasswordReset } = useAuth();
+  const { resetPassword } = useAuth();
   const insets = useSafeAreaInsets();
 
-  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = (val: string) => /\S+@\S+\.\S+/.test(val);
-
   const handleSubmit = async () => {
-    if (!email.trim() || !validateEmail(email.trim())) {
-      setError('Please enter a valid email address');
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -44,15 +47,15 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     setLoading(true);
 
     try {
-      const result = await sendPasswordReset(email.trim());
+      const result = await resetPassword(password);
       if (!result.success) {
-        setError(result.error || 'Failed to send password reset instructions');
+        setError(result.error || 'Failed to update password');
         return;
       }
 
-      onSubmitSuccess(email.trim());
+      onSuccess();
     } catch (e: any) {
-      setError(e.message || 'Failed to send password reset instructions');
+      setError(e.message || 'Failed to update password');
     } finally {
       setLoading(false);
     }
@@ -80,10 +83,9 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           style={styles.backRow}
         >
           <Ionicons name="arrow-back" size={20} color={colors.text} />
-          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
+          <Text style={[styles.backText, { color: colors.text }]}>Cancel</Text>
         </TouchableOpacity>
 
-        {/* Icon & Title */}
         <View style={styles.content}>
           <View
             style={[
@@ -91,14 +93,14 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
               { backgroundColor: isDark ? 'rgba(250, 204, 21, 0.15)' : '#FEF9C3' },
             ]}
           >
-            <Text style={styles.iconEmoji}>🔑</Text>
+            <Text style={styles.iconEmoji}>🛡️</Text>
           </View>
 
           <Text style={[styles.title, { color: colors.text }]}>
-            Forgot Password?
+            Set New Password
           </Text>
           <Text style={[styles.instructions, { color: colors.textSecondary }]}>
-            Enter your registered email address below to receive a password reset verification code.
+            Your identity has been verified. Choose a strong new password for your account.
           </Text>
 
           {error ? (
@@ -119,25 +121,37 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           ) : null}
 
           <Input
-            label="Email Address"
-            placeholder="your@email.com"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
+            label="New Password"
+            placeholder="At least 6 characters"
+            value={password}
+            onChangeText={(t) => {
+              setPassword(t);
               if (error) setError('');
             }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon="mail-outline"
+            isPassword
+            leftIcon="lock-closed-outline"
+            containerStyle={{ width: '100%', marginTop: Spacing.sm }}
+          />
+
+          <Input
+            label="Confirm New Password"
+            placeholder="Re-enter password"
+            value={confirmPassword}
+            onChangeText={(t) => {
+              setConfirmPassword(t);
+              if (error) setError('');
+            }}
+            isPassword
+            leftIcon="shield-checkmark-outline"
             containerStyle={{ width: '100%', marginTop: Spacing.sm }}
           />
 
           <Button
-            title="Send Reset Code"
+            title="Update Password"
             onPress={handleSubmit}
             loading={loading}
             size="lg"
-            style={{ width: '100%', marginTop: Spacing.sm }}
+            style={{ width: '100%', marginTop: Spacing.lg }}
           />
         </View>
       </View>
@@ -165,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
-    marginTop: -40,
+    marginTop: -30,
   },
   iconBox: {
     width: 80,
@@ -209,3 +223,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

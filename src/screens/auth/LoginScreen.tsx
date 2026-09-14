@@ -19,36 +19,55 @@ import { BorderRadius, Spacing, Typography } from '../../constants/theme';
 interface LoginScreenProps {
   onNavigateToRegister: () => void;
   onNavigateToForgotPassword: () => void;
-  onLoginSuccess: () => void;
+  onNavigateToOtp: (email: string) => void;
+  onLoginSuccess?: () => void;
+  initialEmail?: string;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onNavigateToRegister,
   onNavigateToForgotPassword,
+  onNavigateToOtp,
   onLoginSuccess,
+  initialEmail = '',
 }) => {
   const { colors, isDark } = useTheme();
   const { login } = useAuth();
   const insets = useSafeAreaInsets();
 
-  const [email, setEmail] = useState('abdul@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       setError('Please fill in both email and password');
       return;
     }
     setError('');
+    setUnverifiedEmail(null);
     setLoading(true);
+
     try {
-      await login(email, password);
-      onLoginSuccess();
-    } catch (e) {
-      setError('Invalid credentials');
+      const result = await login(email.trim(), password);
+      if (!result.success) {
+        if (result.requiresVerification && result.email) {
+          setUnverifiedEmail(result.email);
+          setError(
+            result.error ||
+              'Your email is not verified. Please verify your email with the 6-digit code sent to your inbox.'
+          );
+        } else {
+          setError(result.error || 'Invalid credentials. Please check your email and password.');
+        }
+        return;
+      }
+      onLoginSuccess?.();
+    } catch (e: any) {
+      setError(e.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +109,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             label="Email"
             placeholder="your@email.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (error) setError('');
+            }}
             autoCapitalize="none"
             keyboardType="email-address"
             leftIcon="mail-outline"
@@ -100,12 +122,46 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             label="Password"
             placeholder="••••••••"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (error) setError('');
+            }}
             isPassword
             leftIcon="lock-closed-outline"
           />
 
-          {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
+          {error ? (
+            <View
+              style={[
+                styles.errorCard,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(239, 68, 68, 0.15)'
+                    : '#FEF2F2',
+                  borderColor: isDark ? '#7F1D1D' : '#FCA5A5',
+                },
+              ]}
+            >
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {unverifiedEmail ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => onNavigateToOtp(unverifiedEmail)}
+              style={styles.verifyPromptBanner}
+            >
+              <View style={styles.verifyPromptLeft}>
+                <Ionicons name="mail-unread-outline" size={20} color="#0F172A" />
+                <Text style={styles.verifyPromptText}>
+                  Verify email with OTP code now
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#0F172A" />
+            </TouchableOpacity>
+          ) : null}
 
           {/* Remember me & Forgot password */}
           <View style={styles.optionsRow}>
@@ -166,7 +222,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <View style={styles.socialButtonsRow}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={handleLogin}
+            onPress={() => {
+              setError('Google login requires OAuth setup in Supabase dashboard.');
+            }}
             style={[
               styles.socialButton,
               {
@@ -183,7 +241,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={handleLogin}
+            onPress={() => {
+              setError('Apple login requires Apple Developer setup in Supabase dashboard.');
+            }}
             style={[
               styles.socialButton,
               {
@@ -260,12 +320,44 @@ const styles = StyleSheet.create({
   formContainer: {
     marginBottom: Spacing.base,
   },
-  errorBanner: {
+  errorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  errorText: {
     color: '#EF4444',
     fontSize: Typography.sizes.xs,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
+    flex: 1,
+    lineHeight: 18,
     fontWeight: '600',
+  },
+  verifyPromptBanner: {
+    backgroundColor: '#FACC15',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  verifyPromptLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  verifyPromptText: {
+    color: '#0F172A',
+    fontWeight: '800',
+    fontSize: Typography.sizes.xs,
+    flex: 1,
   },
   optionsRow: {
     flexDirection: 'row',
@@ -334,4 +426,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

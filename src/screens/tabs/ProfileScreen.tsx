@@ -84,10 +84,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             <View style={{ flex: 1, marginLeft: 16 }}>
               <Text style={[styles.userName, { color: colors.text }]}>
-                {user?.name || 'Abdul Moeid'}
+                {user?.name || 'JavaScript Learner'}
               </Text>
               <Text style={[styles.userHandle, { color: colors.textSecondary }]}>
-                {user?.username || '@abdul.moeid'}
+                {user?.email || user?.username || '@learner'}
               </Text>
               <View style={styles.pillsRow}>
                 <Badge label={`Level ${level}`} variant="primary" size="sm" icon="⚡" />
@@ -155,6 +155,65 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
+
+        {/* Account & Security */}
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Account & Security
+          </Text>
+        </View>
+
+        <Card
+          style={[
+            styles.settingsCard,
+            {
+              backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+              borderColor: isDark ? '#374151' : '#E2E8F0',
+            },
+          ]}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <View
+                style={[
+                  styles.settingIcon,
+                  { backgroundColor: isDark ? '#374151' : '#FEF9C3' },
+                ]}
+              >
+                <Ionicons name="mail-outline" size={18} color="#FACC15" />
+              </View>
+              <View>
+                <Text style={[styles.settingLabel, { color: colors.text }]}>
+                  {user?.email || 'Authenticated User'}
+                </Text>
+                <Text style={{ fontSize: 11, color: '#22C55E', fontWeight: '700' }}>
+                  ✓ Email Verified
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.settingLeft}>
+              <View
+                style={[
+                  styles.settingIcon,
+                  { backgroundColor: isDark ? '#374151' : '#DCFCE7' },
+                ]}
+              >
+                <Ionicons name="shield-checkmark" size={18} color="#22C55E" />
+              </View>
+              <View>
+                <Text style={[styles.settingLabel, { color: colors.text }]}>
+                  JWT Session
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                  Encrypted in SecureStore
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Card>
 
         {/* Settings List */}
         <View style={styles.sectionHeader}>
