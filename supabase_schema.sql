@@ -109,11 +109,15 @@ create policy "Users can update their game scores." on public.user_game_scores
 -- ==============================================================================
 
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   user_name text;
 begin
-  user_name := coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1));
+  user_name := coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1), 'User');
   
   insert into public.profiles (id, email, name, username, avatar_letter)
   values (
@@ -122,18 +126,21 @@ begin
     user_name,
     '@' || lower(replace(user_name, ' ', '.')),
     upper(substring(user_name from 1 for 1))
-  );
+  )
+  on conflict (id) do nothing;
 
   insert into public.user_progress (user_id, xp, level, streak_days)
-  values (new.id, 0, 1, 1);
+  values (new.id, 0, 1, 1)
+  on conflict (user_id) do nothing;
 
   -- First welcome badge
   insert into public.user_badges (user_id, badge_id)
-  values (new.id, 'b1');
+  values (new.id, 'b1')
+  on conflict (user_id, badge_id) do nothing;
 
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
 
 -- Drop trigger if already exists
 drop trigger if exists on_auth_user_created on auth.users;
@@ -141,4 +148,10 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Revoke execute permissions from public, anon, and authenticated roles
+-- (Prevents exposing trigger functions to REST API / RPC callers)
+revoke execute on function public.handle_new_user() from public;
+revoke execute on function public.handle_new_user() from anon;
+revoke execute on function public.handle_new_user() from authenticated;
 
