@@ -16,18 +16,21 @@ export const signInWithGoogleOAuth = async (): Promise<{
   error?: string;
 }> => {
   try {
-    // 1. Generate the cross-platform redirect URI
-    const redirectUrl = makeRedirectUri({
-      scheme: 'js0pro',
-      path: 'auth/callback',
-    });
+    const isWeb = Platform.OS === 'web';
+    const redirectUrl = isWeb
+      ? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
+      : makeRedirectUri({
+          scheme: 'js0pro',
+          path: 'auth/callback',
+        });
+    console.log('🔗 Google OAuth Redirect URI:', redirectUrl);
 
     // 2. Request OAuth authorization URL from Supabase
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
-        skipBrowserRedirect: Platform.OS !== 'web',
+        skipBrowserRedirect: !isWeb,
         queryParams: {
           access_type: 'offline',
           prompt: 'select_account',
@@ -38,8 +41,11 @@ export const signInWithGoogleOAuth = async (): Promise<{
     if (error) throw error;
     if (!data?.url) throw new Error('No authorization URL returned by Supabase.');
 
-    // On web, browser navigation handled automatically
-    if (Platform.OS === 'web') {
+    // On web, redirect the browser to the Google OAuth URL
+    if (isWeb) {
+      if (typeof window !== 'undefined') {
+        window.location.assign(data.url);
+      }
       return { success: true };
     }
 
@@ -90,3 +96,4 @@ export const signInWithGoogleOAuth = async (): Promise<{
     };
   }
 };
+
