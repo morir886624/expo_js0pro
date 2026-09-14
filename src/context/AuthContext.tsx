@@ -266,12 +266,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         let msg = error.message;
+        if (
+          msg.toLowerCase().includes('user already registered') ||
+          msg.toLowerCase().includes('already registered') ||
+          msg.toLowerCase().includes('already exists')
+        ) {
+          return {
+            success: false,
+            error: 'An account with this email already exists. Please log in instead.',
+          };
+        }
         if (msg.toLowerCase().includes('gateway timeout') || (error as any).status === 504) {
           msg = 'Supabase email server timed out (504). Check your custom SMTP in Supabase or turn off "Confirm email" in Supabase Auth.';
         }
         return {
           success: false,
           error: msg,
+        };
+      }
+
+      // CRITICAL SUPABASE CHECK:
+      // When email enumeration protection is active, Supabase returns data.user with
+      // an empty identities array (identities: []) if the email already belongs to an existing account!
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        return {
+          success: false,
+          error: 'An account with this email already exists. Please log in instead.',
         };
       }
 

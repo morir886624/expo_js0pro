@@ -175,8 +175,23 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                 },
               ]}
             >
-              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
-              <Text style={styles.errorText}>{error}</Text>
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" style={{ marginTop: 2 }} />
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text style={styles.errorText}>{error}</Text>
+                {(error.toLowerCase().includes('already exists') ||
+                  error.toLowerCase().includes('already registered') ||
+                  error.toLowerCase().includes('log in')) && (
+                  <TouchableOpacity
+                    onPress={onNavigateToLogin}
+                    style={{ marginTop: 6 }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#FACC15', fontWeight: '800', fontSize: 13 }}>
+                      Log in to your account →
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           ) : null}
 
