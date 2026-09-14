@@ -11,6 +11,7 @@ import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import { OtpVerificationScreen } from '../screens/auth/OtpVerificationScreen';
 import { ResetPasswordScreen } from '../screens/auth/ResetPasswordScreen';
+import { LinkExpiredModal } from '../components/common/LinkExpiredModal';
 
 // Tab Screens
 import { HomeScreen } from '../screens/tabs/HomeScreen';
@@ -48,7 +49,15 @@ type ActiveModalType =
 
 export const RootNavigator: React.FC = () => {
   const { isDark, colors } = useTheme();
-  const { isAuthenticated, hasSeenOnboarding, loading } = useAuth();
+  const {
+    isAuthenticated,
+    hasSeenOnboarding,
+    loading,
+    isPasswordRecovery,
+    setIsPasswordRecovery,
+    linkError,
+    clearLinkError,
+  } = useAuth();
 
   // Navigation states
   const [currentTab, setCurrentTab] = useState<TabName>('home');
@@ -102,10 +111,50 @@ export const RootNavigator: React.FC = () => {
     return <OnboardingScreen onFinish={() => setAuthScreen('login')} />;
   }
 
-  // 3. Auth flow (when not authenticated)
+  // 3. Password recovery flow (triggered when clicking reset link in email)
+  if (isPasswordRecovery || authScreen === 'reset_password') {
+    return (
+      <View style={{ flex: 1 }}>
+        <ResetPasswordScreen
+          onBack={() => {
+            setIsPasswordRecovery(false);
+            setAuthScreen('login');
+          }}
+          onSuccess={() => {
+            setIsPasswordRecovery(false);
+            setAuthScreen('login');
+          }}
+          onRequestNewLink={() => {
+            setIsPasswordRecovery(false);
+            setAuthScreen('forgot_password');
+          }}
+        />
+        <LinkExpiredModal
+          visible={!!linkError}
+          title={linkError?.title}
+          message={linkError?.message}
+          onSignIn={() => {
+            clearLinkError();
+            setIsPasswordRecovery(false);
+            setAuthScreen('login');
+          }}
+          onRequestNewLink={() => {
+            clearLinkError();
+            setIsPasswordRecovery(false);
+            setAuthScreen('forgot_password');
+          }}
+          onClose={clearLinkError}
+        />
+      </View>
+    );
+  }
+
+  // 4. Auth flow (when not authenticated)
   if (!isAuthenticated) {
+    let authScreenView = null;
+
     if (authScreen === 'register') {
-      return (
+      authScreenView = (
         <RegisterScreen
           onNavigateToLogin={() => setAuthScreen('login')}
           onRegisterSuccess={(email, requiresVerification) => {
@@ -117,23 +166,17 @@ export const RootNavigator: React.FC = () => {
           }}
         />
       );
-    }
-
-    if (authScreen === 'forgot_password') {
-      return (
+    } else if (authScreen === 'forgot_password') {
+      authScreenView = (
         <ForgotPasswordScreen
           onBack={() => setAuthScreen('login')}
           onSubmitSuccess={(email) => {
             setAuthEmail(email);
-            setOtpFlowType('recovery');
-            setAuthScreen('otp');
           }}
         />
       );
-    }
-
-    if (authScreen === 'otp') {
-      return (
+    } else if (authScreen === 'otp') {
+      authScreenView = (
         <OtpVerificationScreen
           email={authEmail}
           flowType={otpFlowType}
@@ -147,36 +190,44 @@ export const RootNavigator: React.FC = () => {
           onVerifySuccess={() => {
             if (otpFlowType === 'recovery') {
               setAuthScreen('reset_password');
-            } else {
-              // For signup, Supabase verifyOtp signs the user in automatically,
-              // triggering onAuthStateChange and setting isAuthenticated=true!
             }
           }}
         />
       );
-    }
-
-    if (authScreen === 'reset_password') {
-      return (
-        <ResetPasswordScreen
-          onBack={() => setAuthScreen('login')}
-          onSuccess={() => setAuthScreen('login')}
+    } else {
+      authScreenView = (
+        <LoginScreen
+          initialEmail={authEmail}
+          onNavigateToRegister={() => setAuthScreen('register')}
+          onNavigateToForgotPassword={() => setAuthScreen('forgot_password')}
+          onNavigateToOtp={(email) => {
+            setAuthEmail(email);
+            setOtpFlowType('signup');
+            setAuthScreen('otp');
+          }}
+          onLoginSuccess={() => {}}
         />
       );
     }
 
     return (
-      <LoginScreen
-        initialEmail={authEmail}
-        onNavigateToRegister={() => setAuthScreen('register')}
-        onNavigateToForgotPassword={() => setAuthScreen('forgot_password')}
-        onNavigateToOtp={(email) => {
-          setAuthEmail(email);
-          setOtpFlowType('signup');
-          setAuthScreen('otp');
-        }}
-        onLoginSuccess={() => {}}
-      />
+      <View style={{ flex: 1 }}>
+        {authScreenView}
+        <LinkExpiredModal
+          visible={!!linkError}
+          title={linkError?.title}
+          message={linkError?.message}
+          onSignIn={() => {
+            clearLinkError();
+            setAuthScreen('login');
+          }}
+          onRequestNewLink={() => {
+            clearLinkError();
+            setAuthScreen('forgot_password');
+          }}
+          onClose={clearLinkError}
+        />
+      </View>
     );
   }
 
@@ -317,6 +368,22 @@ export const RootNavigator: React.FC = () => {
       <PremiumModal
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
+      />
+
+      {/* Global Link Expired / Status Modal */}
+      <LinkExpiredModal
+        visible={!!linkError}
+        title={linkError?.title}
+        message={linkError?.message}
+        onSignIn={() => {
+          clearLinkError();
+          setAuthScreen('login');
+        }}
+        onRequestNewLink={() => {
+          clearLinkError();
+          setAuthScreen('forgot_password');
+        }}
+        onClose={clearLinkError}
       />
     </View>
   );

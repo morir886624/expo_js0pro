@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as Linking from 'expo-linking';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import { signInWithGoogleOAuth } from '../services/googleAuth';
@@ -21,6 +22,11 @@ export interface AuthResult {
   error?: string;
 }
 
+export interface LinkErrorInfo {
+  title: string;
+  message: string;
+}
+
 interface AuthContextType {
   user: UserProfile | null;
   session: Session | null;
@@ -28,6 +34,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasSeenOnboarding: boolean;
   loading: boolean;
+  isPasswordRecovery: boolean;
+  setIsPasswordRecovery: (val: boolean) => void;
+  linkError: LinkErrorInfo | null;
+  clearLinkError: () => void;
+  sessionExpiredMessage: string | null;
+  clearSessionExpiredMessage: () => void;
+  urlAuthError: string | null;
+  clearUrlAuthError: () => void;
   login: (email: string, pass: string) => Promise<AuthResult>;
   loginWithGoogle: () => Promise<AuthResult>;
   register: (name: string, email: string, pass: string) => Promise<AuthResult>;
@@ -80,6 +94,141 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
+  const [urlAuthError, setUrlAuthError] = useState<string | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState<boolean>(false);
+  const [linkError, setLinkError] = useState<LinkErrorInfo | null>(null);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+
+  // Keep a ref to track if user was logged in (for session expiration alerts)
+  const userRef = useRef<UserProfile | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const clearUrlAuthError = () => {
+    setUrlAuthError(null);
+    setLinkError(null);
+  };
+
+  const clearLinkError = () => {
+    setLinkError(null);
+    setUrlAuthError(null);
+  };
+
+  const clearSessionExpiredMessage = () => {
+    setSessionExpiredMessage(null);
+  };
+
+  // Helper to parse deep links & hash fragments on both mobile and web
+  const handleIncomingUrl = async (urlStr: string) => {
+    if (!urlStr) return;
+
+    let hashStr = '';
+    if (urlStr.includes('#')) {
+      hashStr = urlStr.split('#')[1];
+    }
+    const hashParams = new URLSearchParams(hashStr);
+
+    let queryStr = '';
+    if (urlStr.includes('?')) {
+      const afterQ = urlStr.split('?')[1];
+      queryStr = afterQ.split('#')[0];
+    }
+    const queryParams = new URLSearchParams(queryStr);
+
+    const errorCode = hashParams.get('error_code') || queryParams.get('error_code');
+    const errorDesc = hashParams.get('error_description') || queryParams.get('error_description');
+
+    if (errorCode) {
+      if (errorCode === 'otp_expired') {
+        const errorInfo: LinkErrorInfo = {
+          title: 'Link Expired or Already Used',
+          message:
+            'This email verification or password reset link has already been used or has expired. For your security, email links can only be clicked once.',
+        };
+        setLinkError(errorInfo);
+        setUrlAuthError(errorInfo.message);
+      } else {
+        const desc = decodeURIComponent(
+          errorDesc?.replace(/\+/g, ' ') || 'Authentication link error. Please try again.'
+        );
+        const errorInfo: LinkErrorInfo = {
+          title: 'Authentication Error',
+          message: desc,
+        };
+        setLinkError(errorInfo);
+        setUrlAuthError(desc);
+      }
+
+      // Clean up URL on web
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        try {
+          window.history.replaceState(null, '', window.location.pathname);
+        } catch {}
+      }
+      return;
+    }
+
+    const type = hashParams.get('type') || queryParams.get('type');
+    if (type === 'recovery') {
+      setIsPasswordRecovery(true);
+    }
+
+    // 1. Handle PKCE authorization code (?code=... or #code=...) from email links & OAuth
+    const code = queryParams.get('code') || hashParams.get('code');
+    if (code) {
+      try {
+        console.log('🔄 Exchanging PKCE code for session...');
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error && data.session) {
+          await syncSessionUser(data.session);
+          // If this was a password reset link, activate recovery mode
+          setIsPasswordRecovery(true);
+        } else if (error) {
+          console.log('Error exchanging code for session:', error.message);
+          setLinkError({
+            title: 'Link Expired or Already Used',
+            message:
+              'This password reset link has already been used or has expired. Please request a new link.',
+          });
+        }
+        // Clean up URL on web so browser address bar is clean
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          try {
+            window.history.replaceState(null, '', window.location.pathname);
+          } catch {}
+        }
+      } catch (e) {
+        console.log('Exception exchanging code:', e);
+      }
+      return;
+    }
+
+    // 2. Handle implicit tokens (access_token & refresh_token)
+    const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
+    if (accessToken && refreshToken) {
+      try {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (!error && data.session) {
+          await syncSessionUser(data.session);
+          if (type === 'recovery') {
+            setIsPasswordRecovery(true);
+          }
+        }
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          try {
+            window.history.replaceState(null, '', window.location.pathname);
+          } catch {}
+        }
+      } catch (e) {
+        console.log('Error setting session from URL:', e);
+      }
+    }
+  };
 
   // Fetch profile record from public.profiles table
   const fetchDbProfile = async (userId: string) => {
@@ -123,7 +272,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuth = async () => {
       try {
-        // 1. Check onboarding status
+        // 1. Web URL check on load
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          if (window.location.hash || window.location.search) {
+            await handleIncomingUrl(window.location.href);
+          }
+        }
+
+        // 2. Mobile deep link check on load
+        try {
+          const initialUrl = await Linking.getInitialURL();
+          if (initialUrl && isMounted) {
+            await handleIncomingUrl(initialUrl);
+          }
+        } catch {}
+
+        // 3. Check onboarding status
         let seenOnboarding = 'false';
         if (Platform.OS === 'web') {
           seenOnboarding =
@@ -142,7 +306,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setHasSeenOnboarding(seenOnboarding === 'true');
         }
 
-        // 2. Check existing Supabase session
+        // 4. Check existing Supabase session
         const { data: { session: initialSession }, error } =
           await supabase.auth.getSession();
 
@@ -164,17 +328,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // 3. Listen to auth state changes (sign in, sign out, token refresh, etc.)
+    // 5. Listen for incoming deep links while app is open
+    const linkingSub = Linking.addEventListener('url', (event) => {
+      if (isMounted) {
+        handleIncomingUrl(event.url);
+      }
+    });
+
+    // 6. Listen to auth state changes (sign in, sign out, password recovery, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      if (isMounted) {
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!isMounted) return;
+
+      console.log(`🔔 Supabase Auth Event: ${event}`);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+        if (currentSession) {
+          await syncSessionUser(currentSession);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        if (userRef.current) {
+          setSessionExpiredMessage('Your session has expired. Please sign in again.');
+        }
+        await syncSessionUser(null);
+      } else if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (currentSession) {
+          await syncSessionUser(currentSession);
+        }
+      } else {
         await syncSessionUser(currentSession);
       }
     });
 
     return () => {
       isMounted = false;
+      linkingSub.remove();
       subscription.unsubscribe();
     };
   }, []);
@@ -198,7 +388,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             success: false,
             requiresVerification: true,
             email: cleanEmail,
-            error: 'Your email is not verified yet. Please enter the verification code sent to your inbox.',
+            error: 'Your email is not verified yet. Please check your inbox and click the verification link.',
           };
         }
         return {
@@ -409,7 +599,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const cleanEmail = email.trim();
-      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
+      const isWeb = Platform.OS === 'web';
+      const redirectTo = isWeb
+        ? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
+        : Linking.createURL('/');
+
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo,
+      });
       if (error) {
         return { success: false, error: error.message };
       }
@@ -417,7 +614,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) {
       return {
         success: false,
-        error: e.message || 'Failed to send reset code.',
+        error: e.message || 'Failed to send reset link.',
       };
     }
   };
@@ -431,20 +628,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        let msg = error.message;
+        if (msg.toLowerCase().includes('session missing')) {
+          msg = 'Your reset link has expired or is invalid. Please request a new password reset link.';
+        }
+        return { success: false, error: msg };
       }
 
+      setIsPasswordRecovery(false);
       return { success: true };
     } catch (e: any) {
+      let msg = e.message || 'Failed to update password.';
+      if (msg.toLowerCase().includes('session missing')) {
+        msg = 'Your reset link has expired or is invalid. Please request a new password reset link.';
+      }
       return {
         success: false,
-        error: e.message || 'Failed to update password.',
+        error: msg,
       };
     }
   };
 
   const logout = async () => {
     try {
+      setSessionExpiredMessage(null);
+      setLinkError(null);
+      setUrlAuthError(null);
+      setIsPasswordRecovery(false);
       await supabase.auth.signOut();
     } catch (e) {
       console.log('Error signing out:', e);
@@ -507,6 +717,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         hasSeenOnboarding,
         loading,
+        isPasswordRecovery,
+        setIsPasswordRecovery,
+        linkError,
+        clearLinkError,
+        sessionExpiredMessage,
+        clearSessionExpiredMessage,
+        urlAuthError,
+        clearUrlAuthError,
         login,
         loginWithGoogle,
         register,

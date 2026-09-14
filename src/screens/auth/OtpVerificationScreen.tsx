@@ -59,15 +59,19 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
         return;
       }
 
-      // 2. If user clicked the link in external browser, check user status
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user?.confirmed_at) {
-        onVerifySuccess();
-        return;
+      // 2. If signup flow and user clicked link in external browser, check user confirmation
+      if (flowType !== 'recovery') {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user?.confirmed_at) {
+          onVerifySuccess();
+          return;
+        }
       }
 
       setInfoMessage(
-        'Please make sure you click the verification link in the email before continuing.'
+        flowType === 'recovery'
+          ? 'Please open the password reset link from your email on this device to set a new password.'
+          : 'Please make sure you click the verification link in the email before continuing.'
       );
     } catch {
       setError('Please click the confirmation link in your email to activate your account.');

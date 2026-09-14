@@ -33,7 +33,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   initialEmail = '',
 }) => {
   const { colors, isDark } = useTheme();
-  const { login, loginWithGoogle } = useAuth();
+  const {
+    login,
+    loginWithGoogle,
+    urlAuthError,
+    clearUrlAuthError,
+    sessionExpiredMessage,
+    clearSessionExpiredMessage,
+  } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState(initialEmail);
@@ -152,6 +159,57 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             leftIcon="lock-closed-outline"
           />
 
+          {sessionExpiredMessage ? (
+            <View
+              style={[
+                styles.errorCard,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(239, 68, 68, 0.15)'
+                    : '#FEF2F2',
+                  borderColor: isDark ? '#7F1D1D' : '#FCA5A5',
+                },
+              ]}
+            >
+              <Ionicons name="time-outline" size={18} color="#EF4444" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.errorText}>
+                  {sessionExpiredMessage}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={clearSessionExpiredMessage}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={16} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {urlAuthError ? (
+            <View
+              style={[
+                styles.errorCard,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(234, 179, 8, 0.15)'
+                    : '#FEF9C3',
+                  borderColor: isDark ? '#EAB308' : '#FACC15',
+                },
+              ]}
+            >
+              <Ionicons name="information-circle-outline" size={18} color="#EAB308" />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.errorText, { color: isDark ? '#FEF08A' : '#854D0E' }]}>
+                  {urlAuthError}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={clearUrlAuthError} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={16} color={isDark ? '#FEF08A' : '#854D0E'} />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           {error ? (
             <View
               style={[
@@ -178,7 +236,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               <View style={styles.verifyPromptLeft}>
                 <Ionicons name="mail-unread-outline" size={20} color="#0F172A" />
                 <Text style={styles.verifyPromptText}>
-                  Verify email with OTP code now
+                  Complete email verification
                 </Text>
               </View>
               <Ionicons name="arrow-forward" size={18} color="#0F172A" />
