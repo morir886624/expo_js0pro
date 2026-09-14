@@ -66,42 +66,61 @@ alter table public.user_badges enable row level security;
 alter table public.user_game_scores enable row level security;
 
 -- Profiles: users can read all profiles (for rankings/leaderboards) and update their own
+drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
 create policy "Public profiles are viewable by everyone." on public.profiles
   for select using (true);
 
+drop policy if exists "Users can insert their own profile." on public.profiles;
 create policy "Users can insert their own profile." on public.profiles
-  for insert with check (auth.uid() = id);
+  for insert with check ((select auth.uid()) = id);
 
+drop policy if exists "Users can update their own profile." on public.profiles;
 create policy "Users can update their own profile." on public.profiles
-  for update using (auth.uid() = id);
+  for update using ((select auth.uid()) = id);
 
 -- User Progress: users can read & update their own progress
+drop policy if exists "Users can view their own progress." on public.user_progress;
 create policy "Users can view their own progress." on public.user_progress
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 
+drop policy if exists "Users can insert their own progress." on public.user_progress;
+create policy "Users can insert their own progress." on public.user_progress
+  for insert with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their own progress." on public.user_progress;
 create policy "Users can update their own progress." on public.user_progress
-  for all using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 
 -- User Lessons: users can view & insert their completed lessons
+drop policy if exists "Users can view their completed lessons." on public.user_lessons;
 create policy "Users can view their completed lessons." on public.user_lessons
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 
+drop policy if exists "Users can record completed lessons." on public.user_lessons;
 create policy "Users can record completed lessons." on public.user_lessons
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 
 -- User Badges: users can view & earn badges
+drop policy if exists "Users can view their unlocked badges." on public.user_badges;
 create policy "Users can view their unlocked badges." on public.user_badges
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 
+drop policy if exists "Users can unlock badges." on public.user_badges;
 create policy "Users can unlock badges." on public.user_badges
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 
 -- Game Scores: viewable for leaderboards, updated by owner
+drop policy if exists "Game scores are viewable by everyone." on public.user_game_scores;
 create policy "Game scores are viewable by everyone." on public.user_game_scores
   for select using (true);
 
+drop policy if exists "Users can insert their game scores." on public.user_game_scores;
+create policy "Users can insert their game scores." on public.user_game_scores
+  for insert with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their game scores." on public.user_game_scores;
 create policy "Users can update their game scores." on public.user_game_scores
-  for all using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 
 -- ==============================================================================
 -- Automatic Trigger on New Signup
