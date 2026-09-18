@@ -1,0 +1,4 @@
+## 2024-05-24 - Hardcoded Supabase Credentials Fallbacks
+**Vulnerability:** Found hardcoded fallback values for `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `src/services/supabase.ts` (e.g., `process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co'`).
+**Learning:** Hardcoding fallback credentials in the source code can expose sensitive information if the environment variables are not correctly configured, potentially leading to unauthorized access to the database. These fallback values often get checked into version control.
+**Prevention:** Never use hardcoded fallbacks for API keys, URLs, or secrets. Always require them to be present in the environment (e.g., `.env` file) and fail early (throw an error) if they are missing to prevent the application from running with exposed or incorrect credentials.
