@@ -1,0 +1,4 @@
+## 2024-05-20 - [CRITICAL] Remove Hardcoded Supabase Secrets
+**Vulnerability:** Hardcoded Supabase URL and Anon Key were found as fallbacks in `src/services/supabase.ts` for when `process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY` were not defined.
+**Learning:** Having hardcoded secrets in source code files exposes sensitive configuration and potential attack vectors if the repository is leaked or accessed by unauthorized individuals. It is standard to configure the environment via `.env` files or secure secret stores and fail or degrade gracefully when they are missing.
+**Prevention:** Remove fallback values for sensitive keys in the codebase. Use `.env.example` to provide developers with a template of required environment variables. Add checks/warnings when required keys are missing rather than relying on hardcoded defaults.
