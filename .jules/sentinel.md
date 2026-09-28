@@ -1,0 +1,4 @@
+## 2026-09-28 - [Hardcoded Supabase API Keys]
+**Vulnerability:** [Hardcoded `SUPABASE_URL` and `SUPABASE_ANON_KEY` as fallback values in `src/services/supabase.ts`]
+**Learning:** [These secrets were provided as defaults in case the environment variables weren't set, exposing the backend database credentials to version control and potentially the compiled application bundle.]
+**Prevention:** [Always set fallback values for sensitive environment variables to empty strings or handle their absence gracefully at runtime. Configure CI/CD pipelines and local setups to supply the necessary environment variables securely without embedding them in the source code.]
