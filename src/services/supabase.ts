@@ -84,11 +84,19 @@ const SecureStorageAdapter = {
   },
 };
 
-export const SUPABASE_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co';
+const _url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const _anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-export const SUPABASE_ANON_KEY =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_5A4XftgLq0utFmHLYMzaDg_fNnmDA79';
+if (!_url || !_anonKey) {
+  // We throw an error rather than falling back to hardcoded production keys
+  // to prevent accidental exposure in open source codebases.
+  throw new Error(
+    'Missing Supabase configuration. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment variables.'
+  );
+}
+
+export const SUPABASE_URL = _url;
+export const SUPABASE_ANON_KEY = _anonKey;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
