@@ -1,0 +1,4 @@
+## 2024-09-30 - Remove hardcoded Supabase secrets
+**Vulnerability:** Found hardcoded fallback values for EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY directly in the source code (src/services/supabase.ts).
+**Learning:** Hardcoding credentials as fallbacks can easily lead to exposing production secrets or access keys if the environment variables fail to load or are not provided.
+**Prevention:** Avoid defining default values for sensitive keys in source files; instead, require proper environment configuration and rely solely on standard environment loading mechanics. Provide empty strings or throw initialization errors to ensure failure without leakage.
