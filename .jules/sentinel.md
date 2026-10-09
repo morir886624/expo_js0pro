@@ -1,0 +1,4 @@
+## 2024-10-09 - Remove Hardcoded Supabase Secrets
+**Vulnerability:** Found hardcoded SUPABASE_URL and SUPABASE_ANON_KEY inside `src/services/supabase.ts` which could lead to unauthorized access to the backend database.
+**Learning:** These secrets were used as fallbacks if environment variables were not loaded correctly, exposing the database credentials directly in the codebase.
+**Prevention:** Remove fallback hardcoded credentials and strictly rely on environment variables (`process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY`). Add proper error handling when the required environment variables are absent instead of hardcoding sensitive data.
