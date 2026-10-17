@@ -1,0 +1,4 @@
+## 2025-03-05 - Fix Hardcoded Supabase API Keys
+**Vulnerability:** Found hardcoded fallback values for `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `src/services/supabase.ts`.
+**Learning:** Defaulting to fallback hardcoded values for API keys risks accidentally exposing or using unauthorized environment configurations if environment variables are not properly set. Even if they appear to be public or anon keys, relying on them natively implies poor security practice in managing environments.
+**Prevention:** Always rely strictly on runtime validation of required environment variables. If a critical environment variable like an API URL or Key is missing, the application should fail fast securely (by throwing an error) rather than silently falling back to a hardcoded string.
