@@ -1,0 +1,4 @@
+## 2024-03-20 - Hardcoded Supabase Credentials
+**Vulnerability:** Supabase URL and Anon Key were hardcoded as fallback values in `src/services/supabase.ts`.
+**Learning:** Hardcoding credentials in source code (even as fallbacks) exposes them to anyone with access to the source code or who can inspect the compiled application. For Expo projects, Supabase credentials should be provided entirely via environment variables prefixed with `EXPO_PUBLIC_`.
+**Prevention:** Instead of using insecure hardcoded fallback values, applications should implement fail-secure principles by throwing a runtime error when required environment variables are missing. This prevents the application from accidentally operating with default or exposed development keys.
