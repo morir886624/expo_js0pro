@@ -1,0 +1,4 @@
+## 2026-10-19 - Hardcoded Credentials Fallback in Production Services
+**Vulnerability:** The Supabase configuration file (`src/services/supabase.ts`) was using a fallback to hardcoded `SUPABASE_URL` and `SUPABASE_ANON_KEY` if the corresponding `EXPO_PUBLIC_` environment variables were undefined. This could lead to a severe security risk where production/development credentials are leaked into version control and the resulting built artifacts if environment variables are ever misconfigured.
+**Learning:** Even if `process.env` is intended to supply values, providing a literal string fallback for critical keys breaks environment-based secret management. An app should fail-fast instead of silently defaulting to hardcoded keys.
+**Prevention:** Never provide fallback strings for API keys, secrets, or URLs. Always implement explicit validation and `throw new Error()` if required security environment variables are missing during application initialization.
