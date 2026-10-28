@@ -84,11 +84,15 @@ const SecureStorageAdapter = {
   },
 };
 
-export const SUPABASE_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co';
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-export const SUPABASE_ANON_KEY =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_5A4XftgLq0utFmHLYMzaDg_fNnmDA79';
+if (!url || !key) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+}
+
+export const SUPABASE_URL = url;
+export const SUPABASE_ANON_KEY = key;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
