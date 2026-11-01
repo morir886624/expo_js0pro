@@ -84,11 +84,16 @@ const SecureStorageAdapter = {
   },
 };
 
-export const SUPABASE_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co';
+if (!process.env.EXPO_PUBLIC_SUPABASE_URL) {
+  throw new Error('Missing environment variable: EXPO_PUBLIC_SUPABASE_URL');
+}
 
-export const SUPABASE_ANON_KEY =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_5A4XftgLq0utFmHLYMzaDg_fNnmDA79';
+if (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing environment variable: EXPO_PUBLIC_SUPABASE_ANON_KEY');
+}
+
+export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
