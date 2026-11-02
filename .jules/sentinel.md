@@ -1,0 +1,4 @@
+## 2024-11-02 - [CRITICAL] Remove Hardcoded Supabase Secrets
+**Vulnerability:** Supabase API URL and Anon Key were hardcoded as fallback values in `src/services/supabase.ts` when environment variables were missing. This exposes credentials and risks unauthorized database access.
+**Learning:** Hardcoded fallbacks are an anti-pattern. While the anon key is public in client apps, it should still be managed securely via environment variables (e.g. `EXPO_PUBLIC_SUPABASE_ANON_KEY`) to prevent accidental commits of production keys and to allow easy rotation. Code should fail securely if required environment variables are absent.
+**Prevention:** Remove fallback values for secrets. Instead, explicitly check for the existence of required environment variables during initialization and throw a descriptive error if they are missing. Use `.env` files for local development and CI/CD secrets for production, ensuring `.env` is added to `.gitignore`.

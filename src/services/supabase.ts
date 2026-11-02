@@ -84,11 +84,17 @@ const SecureStorageAdapter = {
   },
 };
 
-export const SUPABASE_URL =
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co';
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+if (!url) {
+  throw new Error('Missing EXPO_PUBLIC_SUPABASE_URL environment variable');
+}
+export const SUPABASE_URL = url;
 
-export const SUPABASE_ANON_KEY =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_5A4XftgLq0utFmHLYMzaDg_fNnmDA79';
+const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+if (!anonKey) {
+  throw new Error('Missing EXPO_PUBLIC_SUPABASE_ANON_KEY environment variable');
+}
+export const SUPABASE_ANON_KEY = anonKey;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
