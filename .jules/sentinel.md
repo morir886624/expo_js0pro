@@ -1,0 +1,4 @@
+## 2024-06-18 - Hardcoded Fallback Secrets
+**Vulnerability:** Supabase URL and anon key were configured with hardcoded fallback values in `src/services/supabase.ts` (e.g. `process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ibcqcxeanwnauxaaifjs.supabase.co'`).
+**Learning:** This exposes sensitive connection details directly in the source code. While the anon key is intended to be public in a properly configured Supabase project (RLS enabled), including it directly in the source tree is a bad practice as it complicates rotation and key management.
+**Prevention:** Instead of using hardcoded fallback values, applications should throw errors if required environment variables are missing during startup or initialization. This ensures the application fails securely and explicitly rather than silently falling back to a hardcoded configuration.
